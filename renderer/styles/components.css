@@ -1,0 +1,229 @@
+.process-group {
+  margin-bottom: 6px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  cursor: pointer;
+  user-select: none;
+  gap: 10px;
+  transition: background var(--transition-speed);
+}
+
+.group-header:hover {
+  background: var(--bg-hover);
+}
+
+.group-toggle {
+  font-size: 10px;
+  color: var(--text-secondary);
+  transition: transform var(--transition-speed);
+  width: 12px;
+  text-align: center;
+}
+
+.group-toggle.collapsed {
+  transform: rotate(-90deg);
+}
+
+.group-icon {
+  font-size: 14px;
+}
+
+.group-name {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.group-count {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.group-stats {
+  margin-left: auto;
+  display: flex;
+  gap: 14px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.group-body {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.group-body.collapsed {
+  max-height: 0 !important;
+}
+
+.process-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.process-table th {
+  text-align: left;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  background: var(--bg-secondary);
+}
+
+.process-table td {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  border-bottom: 1px solid var(--bg-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.process-table tr {
+  transition: background var(--transition-speed);
+}
+
+.process-table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.process-table .col-name {
+  max-width: 200px;
+  color: var(--text-primary);
+}
+
+.process-table .col-pid {
+  width: 70px;
+  color: var(--text-secondary);
+}
+
+.process-table .col-port {
+  width: 80px;
+  color: var(--accent-cyan);
+}
+
+.process-table .col-cpu {
+  width: 65px;
+  text-align: right;
+}
+
+.process-table .col-ram {
+  width: 80px;
+  text-align: right;
+}
+
+.process-table .col-uptime {
+  width: 90px;
+  color: var(--text-secondary);
+}
+
+.process-table .col-action {
+  width: 50px;
+  text-align: center;
+}
+
+.cpu-high {
+  color: var(--accent-red);
+}
+
+.cpu-medium {
+  color: var(--accent-amber);
+}
+
+.cpu-low {
+  color: var(--accent-green);
+}
+
+.kill-btn {
+  background: transparent;
+  border: 1px solid var(--accent-red);
+  color: var(--accent-red);
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all var(--transition-speed);
+}
+
+.kill-btn:hover {
+  background: var(--accent-red);
+  color: #fff;
+}
+
+.warning-row {
+  border-left: 3px solid var(--accent-amber);
+}
+
+.warning-badge {
+  display: inline-block;
+  background: rgba(224, 175, 104, 0.15);
+  color: var(--accent-amber);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 6px;
+}
+
+/* Status bar */
+#status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 20px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+.status-warnings {
+  color: var(--accent-amber);
+}
+
+.status-section {
+  display: flex;
+  gap: 16px;
+}
+
+/* Group color accents */
+.group-dev .group-name { color: var(--accent-green); }
+.group-docker .group-name { color: var(--accent-blue); }
+.group-databases .group-name { color: var(--accent-purple); }
+.group-apps .group-name { color: var(--accent-cyan); }
+.group-system .group-name { color: var(--text-secondary); }
+
+.no-processes {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.process-table tbody tr {
+  animation: fadeIn 0.15s ease;
+}
