@@ -1,0 +1,16 @@
+{
+  "name": "localhost-dashboard",
+  "version": "1.0.0",
+  "description": "Developer-focused task manager for Windows",
+  "main": "main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --inspect"
+  },
+  "dependencies": {
+    "electron": "^33.0.0",
+    "systeminformation": "^5.22.0"
+  },
+  "author": "",
+  "license": "MIT"
+}
