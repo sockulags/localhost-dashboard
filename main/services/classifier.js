@@ -48,9 +48,12 @@ const GROUP_META = {
 };
 
 function classify(processName, ports) {
+  // Strip .exe suffix for cross-platform compatibility
+  const name = processName.replace(/\.exe$/i, '');
+
   // Try name-based classification first
   for (const rule of GROUP_RULES) {
-    if (rule.match(processName)) {
+    if (rule.match(name)) {
       return rule.group;
     }
   }
