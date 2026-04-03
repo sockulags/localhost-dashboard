@@ -1,3 +1,10 @@
+let notificationsEnabled = true;
+
+// Load initial state from main process
+window.api.getNotificationsEnabled().then((val) => {
+  notificationsEnabled = val;
+});
+
 function renderStatusBar() {
   const bar = document.getElementById('status-bar');
   const warningCount = AppState.warnings.length;
@@ -11,6 +18,17 @@ function renderStatusBar() {
 
   const warningClass = warningCount > 0 ? 'status-warnings' : '';
 
+  const notifLabel = notificationsEnabled ? '🔔 Notifications' : '🔕 Notifications';
+  const notifBtn = h('button', {
+    className: `notif-toggle ${notificationsEnabled ? 'notif-on' : 'notif-off'}`,
+    title: notificationsEnabled ? 'Disable notifications' : 'Enable notifications',
+  }, notifLabel);
+
+  notifBtn.addEventListener('click', async () => {
+    notificationsEnabled = await window.api.setNotificationsEnabled(!notificationsEnabled);
+    renderStatusBar();
+  });
+
   bar.innerHTML = '';
   bar.appendChild(
     h('div', { className: 'status-section' }, [
@@ -20,6 +38,7 @@ function renderStatusBar() {
   );
   bar.appendChild(
     h('div', { className: 'status-section' }, [
+      notifBtn,
       h('span', {}, elapsed !== null ? `Last refresh: ${elapsed}s ago` : 'Loading...'),
     ])
   );

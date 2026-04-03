@@ -224,6 +224,32 @@
   gap: 16px;
 }
 
+.notif-toggle {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all var(--transition-speed);
+}
+
+.notif-toggle:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.notif-toggle.notif-on {
+  color: var(--accent-green);
+  border-color: rgba(158, 206, 106, 0.3);
+}
+
+.notif-toggle.notif-off {
+  color: var(--text-muted);
+}
+
 /* Group color accents */
 .group-dev .group-name { color: var(--accent-green); }
 .group-docker .group-name { color: var(--accent-blue); }
@@ -245,4 +271,19 @@
 
 .process-table tbody tr {
   animation: fadeIn 0.15s ease;
+}
+
+.highlight-row {
+  animation: highlightPulse 3s ease-out !important;
+}
+
+@keyframes highlightPulse {
+  0%, 15% {
+    background: rgba(224, 175, 104, 0.25);
+    box-shadow: inset 0 0 0 1px var(--accent-amber);
+  }
+  100% {
+    background: transparent;
+    box-shadow: none;
+  }
 }
