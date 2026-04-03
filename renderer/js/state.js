@@ -1,3 +1,5 @@
+const HISTORY_MAX = 60;
+
 const AppState = {
   groups: {},
   warnings: [],
@@ -8,14 +10,42 @@ const AppState = {
   sortDirection: 'desc',
   collapsedGroups: new Set(['system']),
   listeners: [],
+  history: new Map(),
 
   update(data) {
     if (!data) return;
+    this._recordHistory(data);
     this.groups = data.groups;
     this.warnings = data.warnings;
     this.lastUpdated = data.timestamp;
     this.totalProcesses = data.totalProcesses;
     this.notify();
+  },
+
+  _recordHistory(data) {
+    const activePids = new Set();
+    for (const group of Object.values(data.groups)) {
+      for (const proc of group.processes) {
+        activePids.add(proc.pid);
+        if (!this.history.has(proc.pid)) {
+          this.history.set(proc.pid, []);
+        }
+        const buf = this.history.get(proc.pid);
+        buf.push({ cpu: proc.cpu, memKB: proc.memKB || 0 });
+        if (buf.length > HISTORY_MAX) {
+          buf.shift();
+        }
+      }
+    }
+    for (const pid of this.history.keys()) {
+      if (!activePids.has(pid)) {
+        this.history.delete(pid);
+      }
+    }
+  },
+
+  getHistory(pid) {
+    return this.history.get(pid) || [];
   },
 
   setFilter(text) {
