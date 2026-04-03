@@ -86,6 +86,25 @@
   background: var(--bg-secondary);
 }
 
+.process-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--transition-speed);
+}
+
+.process-table th.sortable:hover {
+  color: var(--text-secondary);
+}
+
+.process-table th.sort-active {
+  color: var(--accent-blue);
+}
+
+.sort-indicator {
+  font-size: 8px;
+  margin-left: 2px;
+}
+
 .process-table td {
   padding: 5px 10px;
   font-size: 12px;

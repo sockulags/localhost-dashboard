@@ -1,12 +1,28 @@
+function renderSortableHeader(label, column, cssClass) {
+  const isActive = AppState.sortColumn === column;
+  const arrow = isActive
+    ? (AppState.sortDirection === 'asc' ? ' \u25B2' : ' \u25BC')
+    : '';
+  const activeClass = isActive ? ' sort-active' : '';
+
+  const th = h('th', { className: `${cssClass} sortable${activeClass}` }, [
+    h('span', {}, label),
+    h('span', { className: 'sort-indicator' }, arrow),
+  ]);
+
+  th.addEventListener('click', () => AppState.setSort(column));
+  return th;
+}
+
 function renderProcessTable(processes) {
   const thead = h('thead', {}, [
     h('tr', {}, [
-      h('th', { className: 'col-name' }, 'Name'),
-      h('th', { className: 'col-pid' }, 'PID'),
-      h('th', { className: 'col-port' }, 'Port'),
-      h('th', { className: 'col-cpu' }, 'CPU'),
-      h('th', { className: 'col-ram' }, 'RAM'),
-      h('th', { className: 'col-uptime' }, 'Uptime'),
+      renderSortableHeader('Name', 'name', 'col-name'),
+      renderSortableHeader('PID', 'pid', 'col-pid'),
+      renderSortableHeader('Port', 'port', 'col-port'),
+      renderSortableHeader('CPU', 'cpu', 'col-cpu'),
+      renderSortableHeader('RAM', 'ram', 'col-ram'),
+      renderSortableHeader('Uptime', 'uptime', 'col-uptime'),
       h('th', { className: 'col-action' }, ''),
     ]),
   ]);
