@@ -9,6 +9,7 @@ const AppState = {
   sortColumn: 'cpu',
   sortDirection: 'desc',
   collapsedGroups: new Set(['system']),
+  expandedPids: new Map(), // pid -> { loading: bool, data: null | {...} }
   listeners: [],
   history: new Map(),
 
@@ -40,6 +41,12 @@ const AppState = {
     for (const pid of this.history.keys()) {
       if (!activePids.has(pid)) {
         this.history.delete(pid);
+      }
+    }
+    // Clean up expanded state for dead processes
+    for (const pid of this.expandedPids.keys()) {
+      if (!activePids.has(pid)) {
+        this.expandedPids.delete(pid);
       }
     }
   },
@@ -129,6 +136,37 @@ const AppState = {
           return 0;
       }
     });
+  },
+
+  toggleExpanded(pid) {
+    if (this.expandedPids.has(pid)) {
+      this.expandedPids.delete(pid);
+      this.notify();
+    } else {
+      this.expandedPids.set(pid, { loading: true, data: null });
+      this.notify();
+      window.api.getProcessDetails(pid).then((data) => {
+        // Only update if still expanded (user may have collapsed it)
+        if (this.expandedPids.has(pid)) {
+          this.expandedPids.set(pid, { loading: false, data });
+          this.notify();
+        }
+      }).catch(() => {
+        if (this.expandedPids.has(pid)) {
+          this.expandedPids.set(pid, { loading: false, data: null });
+          this.notify();
+        }
+      });
+    }
+  },
+
+  isExpanded(pid) {
+    return this.expandedPids.has(pid);
+  },
+
+  getExpandedData(pid) {
+    const entry = this.expandedPids.get(pid);
+    return entry || null;
   },
 
   subscribe(fn) {

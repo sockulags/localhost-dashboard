@@ -1,6 +1,7 @@
 const { ipcMain } = require('electron');
 const { collectAll } = require('./poll-manager');
 const { kill } = require('./services/process-killer');
+const detailCollector = require('./collectors/detail-collector');
 const { updateTooltip } = require('./tray-manager');
 const notifier = require('./services/notifier');
 
@@ -27,6 +28,10 @@ function registerIpcHandlers() {
 
   ipcMain.handle('get-notifications-enabled', () => {
     return notifier.isEnabled();
+  });
+
+  ipcMain.handle('get-process-details', async (_event, pid) => {
+    return detailCollector.collect(pid);
   });
 }
 
