@@ -1,6 +1,7 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const { registerIpcHandlers } = require('./ipc-handlers');
+const { createTray, setQuitting, destroy: destroyTray } = require('./tray-manager');
 
 let mainWindow;
 
@@ -28,14 +29,26 @@ function createWindow() {
 app.whenReady().then(() => {
   registerIpcHandlers();
   createWindow();
+  createTray(mainWindow);
+});
+
+app.on('before-quit', () => {
+  setQuitting(true);
 });
 
 app.on('window-all-closed', () => {
-  app.quit();
+  // Don't quit — the tray icon keeps the app alive.
+  // Quitting is handled explicitly via app.quit() from tray menu or keyboard shortcut.
 });
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
+  } else if (mainWindow) {
+    mainWindow.show();
   }
+});
+
+app.on('will-quit', () => {
+  destroyTray();
 });
