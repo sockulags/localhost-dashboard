@@ -67,6 +67,30 @@ function startRefreshTimer() {
   }, 1000);
 }
 
+function scrollToProcess(pid) {
+  if (pid == null) return; // summary notification, just show the window
+
+  // Expand all groups so the process is visible
+  for (const key of GROUP_ORDER) {
+    if (AppState.isCollapsed(key)) {
+      AppState.collapsedGroups.delete(key);
+    }
+  }
+  AppState.notify();
+
+  const safePid = Number(pid);
+  if (!Number.isFinite(safePid)) return;
+
+  // Allow a frame for the DOM to update, then scroll & highlight
+  requestAnimationFrame(() => {
+    const row = document.querySelector(`tr[data-pid="${safePid}"]`);
+    if (!row) return;
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    row.classList.add('highlight-row');
+    setTimeout(() => row.classList.remove('highlight-row'), 3000);
+  });
+}
+
 // Init
 document.addEventListener('DOMContentLoaded', () => {
   AppState.subscribe(render);
@@ -76,6 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
   filterInput.addEventListener('input', (e) => {
     AppState.setFilter(e.target.value);
   });
+
+  // Listen for notification clicks
+  window.api.onScrollToProcess(scrollToProcess);
 
   // Start polling
   poll();

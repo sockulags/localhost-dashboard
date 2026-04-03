@@ -2,6 +2,7 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const { registerIpcHandlers } = require('./ipc-handlers');
 const { createTray, setQuitting, destroy: destroyTray } = require('./tray-manager');
+const notifier = require('./services/notifier');
 
 let mainWindow;
 
@@ -30,6 +31,16 @@ app.whenReady().then(() => {
   registerIpcHandlers();
   createWindow();
   createTray(mainWindow);
+
+  notifier.onClick((pid) => {
+    if (!mainWindow) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+    if (pid != null) {
+      mainWindow.webContents.send('scroll-to-process', pid);
+    }
+  });
 });
 
 app.on('before-quit', () => {
