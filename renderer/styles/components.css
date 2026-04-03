@@ -139,12 +139,12 @@
 }
 
 .process-table .col-cpu {
-  width: 65px;
+  width: 120px;
   text-align: right;
 }
 
 .process-table .col-ram {
-  width: 80px;
+  width: 135px;
   text-align: right;
 }
 
@@ -275,6 +275,75 @@
 
 .highlight-row {
   animation: highlightPulse 3s ease-out !important;
+}
+
+/* Sparklines */
+.sparkline {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity var(--transition-speed);
+  flex-shrink: 0;
+}
+
+.sparkline:hover {
+  opacity: 1;
+}
+
+.col-cpu,
+.col-ram {
+  white-space: nowrap;
+}
+
+.cell-value {
+  display: inline-block;
+  min-width: 42px;
+  text-align: right;
+}
+
+/* Sparkline detail modal */
+.sparkline-modal .modal-content {
+  min-width: 460px;
+  padding: 16px 20px;
+  text-align: left;
+}
+
+.sparkline-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.sparkline-detail-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sparkline-detail-stats {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  white-space: pre;
+}
+
+.sparkline-detail-chart {
+  display: block;
+  margin: 0 auto;
+}
+
+.sparkline-detail-footer {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.sparkline-detail-samples {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
 }
 
 @keyframes highlightPulse {
