@@ -42,7 +42,13 @@ function render() {
 
     // Set max-height for animation when not collapsed
     if (!isCollapsed && group.processes.length > 0) {
-      body.style.maxHeight = `${group.processes.length * 34 + 30}px`;
+      const hasExpanded = group.processes.some((p) => AppState.isExpanded(p.pid));
+      if (hasExpanded) {
+        // Disable max-height constraint when detail rows are present
+        body.style.maxHeight = 'none';
+      } else {
+        body.style.maxHeight = `${group.processes.length * 34 + 30}px`;
+      }
     }
 
     section.appendChild(body);
