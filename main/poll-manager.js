@@ -3,7 +3,8 @@ const portCollector = require('./collectors/port-collector');
 const systemCollector = require('./collectors/system-collector');
 const dockerCollector = require('./collectors/docker-collector');
 const { classify, GROUP_META } = require('./services/classifier');
-const { detect } = require('./services/anomaly-detector');
+const { detect, detectThresholds } = require('./services/anomaly-detector');
+const config = require('./services/config');
 
 let busy = false;
 let dockerCacheCounter = 0;
@@ -75,8 +76,14 @@ async function collectAll() {
       });
     }
 
-    // Detect anomalies
+    // Detect anomalies (port conflicts + resource thresholds)
     const warnings = detect(merged);
+    const thresholdWarnings = detectThresholds(merged, {
+      cpuThreshold: config.get('cpuThreshold'),
+      memThresholdMB: config.get('memThresholdMB'),
+      sustainPolls: config.get('thresholdSustainPolls'),
+    });
+    warnings.push(...thresholdWarnings);
     const warningPids = new Set(warnings.map((w) => w.pid));
     for (const proc of merged) {
       proc.hasWarning = warningPids.has(proc.pid);

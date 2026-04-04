@@ -133,6 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     pollInterval = (cfg.pollInterval || 3) * 1000;
     applyTheme(cfg.theme);
     AppState.profiles = cfg.profiles || [];
+    AppState.setPinned(cfg.pinnedNames || []);
   } catch {
     // Config not available yet — use defaults
     AppState.profiles = [];
@@ -150,11 +151,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     settingsBtn.addEventListener('click', openSettings);
   }
 
+  // Export button
+  const exportBtn = document.getElementById('export-btn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => window.api.exportSnapshot());
+  }
+
   // Listen for config changes from the settings panel
   window.addEventListener('config-changed', (e) => {
     const cfg = e.detail;
     applyTheme(cfg.theme);
     AppState.profiles = cfg.profiles || [];
+    AppState.setPinned(cfg.pinnedNames || []);
 
     const newInterval = (cfg.pollInterval || 3) * 1000;
     if (newInterval !== pollInterval) {
@@ -166,7 +174,51 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Listen for notification clicks
   window.api.onScrollToProcess(scrollToProcess);
 
+  // Global keyboard shortcuts
+  document.addEventListener('keydown', handleGlobalKeys);
+
   // Start polling
   startPolling();
   startRefreshTimer();
 });
+
+function handleGlobalKeys(e) {
+  const filterInput = document.getElementById('filter-input');
+  const isTyping = document.activeElement && (
+    document.activeElement.tagName === 'INPUT' ||
+    document.activeElement.tagName === 'TEXTAREA' ||
+    document.activeElement.tagName === 'SELECT'
+  );
+
+  // Escape clears filter and blurs the input
+  if (e.key === 'Escape' && document.activeElement === filterInput) {
+    filterInput.value = '';
+    AppState.setFilter('');
+    filterInput.blur();
+    e.preventDefault();
+    return;
+  }
+
+  // Ctrl/Cmd+E — export snapshot
+  if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+    e.preventDefault();
+    window.api.exportSnapshot().then((r) => {
+      if (r && r.success) console.log('Snapshot exported:', r.path);
+    });
+    return;
+  }
+
+  // Ctrl/Cmd+, — open settings
+  if ((e.ctrlKey || e.metaKey) && e.key === ',') {
+    e.preventDefault();
+    openSettings();
+    return;
+  }
+
+  // "/" focuses the filter (when not already typing somewhere)
+  if (e.key === '/' && !isTyping) {
+    e.preventDefault();
+    filterInput.focus();
+    filterInput.select();
+  }
+}
