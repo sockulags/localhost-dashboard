@@ -1,11 +1,15 @@
-const { ipcMain, shell } = require('electron');
+const { ipcMain, shell, app } = require('electron');
 const { collectAll } = require('./poll-manager');
 const { kill } = require('./services/process-killer');
 const { collect: collectDetails, getExecutablePath } = require('./collectors/detail-collector');
 const { updateTooltip } = require('./tray-manager');
 const notifier = require('./services/notifier');
+const config = require('./services/config');
 
 function registerIpcHandlers() {
+  // Initialise notifier from saved config
+  notifier.setEnabled(config.get('notifications'));
+
   ipcMain.handle('get-processes', async () => {
     const data = await collectAll();
     if (data) {
@@ -23,6 +27,7 @@ function registerIpcHandlers() {
 
   ipcMain.handle('set-notifications-enabled', (_event, value) => {
     notifier.setEnabled(value);
+    config.set('notifications', value);
     return notifier.isEnabled();
   });
 
@@ -41,6 +46,25 @@ function registerIpcHandlers() {
       return { success: true };
     }
     return { success: false, error: 'Could not resolve executable path' };
+  });
+
+  // ── Config IPC ───────────────────────────────────────────────
+  ipcMain.handle('get-config', () => {
+    return config.getAll();
+  });
+
+  ipcMain.handle('set-config', (_event, key, value) => {
+    const updated = config.set(key, value);
+
+    // Side-effects when specific settings change
+    if (key === 'notifications') {
+      notifier.setEnabled(updated.notifications);
+    }
+    if (key === 'autostart') {
+      app.setLoginItemSettings({ openAtLogin: !!value });
+    }
+
+    return updated;
   });
 }
 

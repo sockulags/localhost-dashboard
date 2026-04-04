@@ -1,5 +1,6 @@
 const { app, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
+const config = require('./services/config');
 
 let tray = null;
 let mainWindow = null;
@@ -32,9 +33,9 @@ function createTray(window) {
 
   tray.on('double-click', showWindow);
 
-  // Intercept window close: hide to tray instead of quitting
+  // Intercept window close: hide to tray if setting is enabled
   mainWindow.on('close', (event) => {
-    if (!isQuitting) {
+    if (!isQuitting && config.get('minimizeToTray')) {
       event.preventDefault();
       mainWindow.hide();
     }

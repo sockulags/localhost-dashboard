@@ -3,16 +3,20 @@ const path = require('path');
 const { registerIpcHandlers } = require('./ipc-handlers');
 const { createTray, setQuitting, destroy: destroyTray } = require('./tray-manager');
 const notifier = require('./services/notifier');
+const config = require('./services/config');
 
 let mainWindow;
 
 function createWindow() {
+  const theme = config.get('theme');
+  const bgColor = theme === 'light' ? '#f0f0f3' : '#1a1b26';
+
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 750,
     minWidth: 800,
     minHeight: 500,
-    backgroundColor: '#1a1b26',
+    backgroundColor: bgColor,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -31,6 +35,9 @@ app.whenReady().then(() => {
   registerIpcHandlers();
   createWindow();
   createTray(mainWindow);
+
+  // Apply autostart setting
+  app.setLoginItemSettings({ openAtLogin: !!config.get('autostart') });
 
   notifier.onClick((pid) => {
     if (!mainWindow) return;
