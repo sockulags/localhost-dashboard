@@ -20,6 +20,12 @@ function render() {
   // Rebuild the group containers
   container.innerHTML = '';
 
+  // Profile panel (top of the list)
+  const profileContainer = document.getElementById('profile-panel-container');
+  if (profileContainer) {
+    renderProfilePanel(profileContainer);
+  }
+
   let hasAny = false;
 
   for (const key of GROUP_ORDER) {
@@ -126,8 +132,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cfg = await window.api.getConfig();
     pollInterval = (cfg.pollInterval || 3) * 1000;
     applyTheme(cfg.theme);
+    AppState.profiles = cfg.profiles || [];
   } catch {
     // Config not available yet — use defaults
+    AppState.profiles = [];
   }
 
   // Filter input
@@ -146,6 +154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('config-changed', (e) => {
     const cfg = e.detail;
     applyTheme(cfg.theme);
+    AppState.profiles = cfg.profiles || [];
 
     const newInterval = (cfg.pollInterval || 3) * 1000;
     if (newInterval !== pollInterval) {
