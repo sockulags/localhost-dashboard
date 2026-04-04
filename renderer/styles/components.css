@@ -58,6 +58,31 @@
   color: var(--text-secondary);
 }
 
+.group-actions-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 6px;
+  border-radius: 3px;
+  line-height: 1;
+  transition: all var(--transition-speed);
+  opacity: 0;
+  margin-left: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.group-header:hover .group-actions-btn {
+  opacity: 1;
+}
+
+.group-actions-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  background: var(--bg-hover);
+}
+
 .group-body {
   overflow: hidden;
   transition: max-height 0.3s ease;
@@ -837,4 +862,59 @@
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-4px); }
   75% { transform: translateX(4px); }
+}
+
+/* ── Batch confirm dialog ────────────────────────────── */
+.batch-confirm-content {
+  min-width: 380px;
+  max-width: 480px;
+  text-align: left;
+}
+
+.batch-confirm-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.batch-confirm-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+}
+
+.batch-confirm-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 10px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.batch-confirm-item:last-child {
+  border-bottom: none;
+}
+
+.batch-confirm-name {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.batch-confirm-pid {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.batch-confirm-port {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-cyan);
+  margin-left: auto;
 }

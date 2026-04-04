@@ -31,4 +31,24 @@ function kill(pid) {
   }
 }
 
-module.exports = { kill };
+function killMultiple(pids) {
+  if (!Array.isArray(pids) || pids.length === 0) {
+    return { success: false, error: 'No PIDs provided', results: [] };
+  }
+
+  const results = pids.map((pid) => ({
+    pid,
+    ...kill(pid),
+  }));
+
+  const failed = results.filter((r) => !r.success);
+  return {
+    success: failed.length === 0,
+    total: pids.length,
+    killed: pids.length - failed.length,
+    failed: failed.length,
+    results,
+  };
+}
+
+module.exports = { kill, killMultiple };
