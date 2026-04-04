@@ -1,7 +1,7 @@
-const { ipcMain } = require('electron');
+const { ipcMain, shell } = require('electron');
 const { collectAll } = require('./poll-manager');
 const { kill } = require('./services/process-killer');
-const detailCollector = require('./collectors/detail-collector');
+const { collect: collectDetails, getExecutablePath } = require('./collectors/detail-collector');
 const { updateTooltip } = require('./tray-manager');
 const notifier = require('./services/notifier');
 
@@ -31,7 +31,16 @@ function registerIpcHandlers() {
   });
 
   ipcMain.handle('get-process-details', async (_event, pid) => {
-    return detailCollector.collect(pid);
+    return collectDetails(pid);
+  });
+
+  ipcMain.handle('open-file-location', async (_event, pid) => {
+    const exePath = getExecutablePath(pid);
+    if (exePath) {
+      shell.showItemInFolder(exePath);
+      return { success: true };
+    }
+    return { success: false, error: 'Could not resolve executable path' };
   });
 }
 

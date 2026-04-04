@@ -165,6 +165,11 @@ function renderProcessTable(processes) {
     ]);
 
     row.addEventListener('click', () => AppState.toggleExpanded(proc.pid));
+    row.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showContextMenu(e.clientX, e.clientY, proc);
+    });
     row.style.cursor = 'pointer';
 
     if (proc.hasWarning) {
