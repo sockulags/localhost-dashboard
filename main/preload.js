@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('api', {
   openFileLocation: (pid) => ipcRenderer.invoke('open-file-location', pid),
   getConfig: () => ipcRenderer.invoke('get-config'),
   setConfig: (key, value) => ipcRenderer.invoke('set-config', key, value),
+  launchServiceCommand: (command, cwd) => ipcRenderer.invoke('launch-service-command', { command, cwd }),
   onScrollToProcess: (callback) => {
     ipcRenderer.on('scroll-to-process', (_event, pid) => callback(pid));
   },
