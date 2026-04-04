@@ -919,6 +919,169 @@
   margin-left: auto;
 }
 
+/* ── Profile Panel ───────────────────────────────────── */
+#profile-panel-container {
+  flex-shrink: 0;
+}
+
+.profile-panel {
+  padding: 6px 12px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  font-size: 12px;
+}
+
+.profile-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 80px;
+}
+
+.profile-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.profile-badge.badge-all {
+  background: rgba(158, 206, 106, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(158, 206, 106, 0.3);
+}
+
+.profile-badge.badge-partial {
+  background: rgba(224, 175, 104, 0.15);
+  color: var(--accent-amber);
+  border: 1px solid rgba(224, 175, 104, 0.3);
+}
+
+.profile-badge.badge-none {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+.profile-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.btn-profile {
+  padding: 3px 10px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all var(--transition-speed);
+  font-family: var(--font-sans);
+}
+
+.btn-profile:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-profile-start {
+  border-color: rgba(158, 206, 106, 0.4);
+  color: var(--accent-green);
+  background: rgba(158, 206, 106, 0.08);
+}
+
+.btn-profile-start:not(:disabled):hover {
+  background: rgba(158, 206, 106, 0.18);
+}
+
+.btn-profile-stop {
+  border-color: rgba(247, 118, 142, 0.4);
+  color: var(--accent-red);
+  background: rgba(247, 118, 142, 0.08);
+}
+
+.btn-profile-stop:not(:disabled):hover {
+  background: rgba(247, 118, 142, 0.18);
+}
+
+/* ── Profile settings ─────────────────────────────────── */
+.settings-profiles-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.settings-profile-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.settings-profile-card:last-child {
+  margin-bottom: 0;
+}
+
+.settings-profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.settings-profile-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-blue);
+}
+
+.settings-service-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.settings-service-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.settings-svc-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-cyan);
+  min-width: 80px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-svc-cmd {
+  flex: 2;
+  min-width: 0;
+}
+
+.settings-svc-cwd {
+  flex: 1;
+  min-width: 0;
+}
+
 /* ── Docker Containers ───────────────────────────────── */
 .group-containers .group-name {
   color: var(--accent-blue);

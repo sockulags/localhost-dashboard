@@ -11,6 +11,7 @@ const DEFAULTS = {
   autostart: false,
   theme: 'dark',           // 'dark' | 'light'
   customRules: [],         // [{ pattern: string, group: string }]
+  profiles: [],            // [{ id, name, services: [{ id, name, pattern, command, cwd }] }]
 };
 
 const VALID_THEMES = ['dark', 'light'];
@@ -64,6 +65,28 @@ function validate(cfg) {
     } catch {
       return false;
     }
+  });
+
+  // profiles: validate each entry
+  if (!Array.isArray(result.profiles)) {
+    result.profiles = [];
+  }
+  result.profiles = result.profiles.filter((profile) => {
+    if (!profile || typeof profile.id !== 'string') return false;
+    if (typeof profile.name !== 'string' || !profile.name.trim()) return false;
+    if (!Array.isArray(profile.services)) return false;
+    profile.services = profile.services.filter((s) => {
+      if (!s || typeof s.id !== 'string') return false;
+      if (typeof s.name !== 'string' || !s.name.trim()) return false;
+      if (typeof s.pattern !== 'string') return false;
+      try {
+        new RegExp(s.pattern, 'i');
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    return true;
   });
 
   return result;
