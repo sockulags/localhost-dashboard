@@ -111,6 +111,31 @@ function renderSortableHeader(label, column, cssClass) {
   return th;
 }
 
+function renderPortCell(ports) {
+  if (!ports || ports.length === 0) return h('span', {}, '\u2014');
+
+  const container = h('span', { className: 'port-cell' });
+  const shown = ports.slice(0, 2);
+  shown.forEach((port, i) => {
+    const link = h('a', {
+      className: 'port-link',
+      title: `Open http://localhost:${port}`,
+      href: '#',
+    }, String(port));
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.api.openUrl(`http://localhost:${port}`);
+    });
+    container.appendChild(link);
+    if (i < shown.length - 1) container.appendChild(h('span', {}, ', '));
+  });
+  if (ports.length > 2) {
+    container.appendChild(h('span', { className: 'port-more' }, ` +${ports.length - 2}`));
+  }
+  return container;
+}
+
 function renderProcessTable(processes) {
   const thead = h('thead', {}, [
     h('tr', {}, [
@@ -151,13 +176,23 @@ function renderProcessTable(processes) {
 
     const isExpanded = AppState.isExpanded(proc.pid);
 
-    const row = h('tr', { dataset: { pid: proc.pid }, className: isExpanded ? 'expanded-row' : '' }, [
-      h('td', { className: 'col-name', title: proc.name }, [
-        h('span', { className: `expand-indicator ${isExpanded ? 'open' : ''}` }, '\u25B6'),
-        h('span', {}, proc.name),
-      ]),
+    const isPinned = AppState.isPinned(proc.name);
+    const rowClasses = [];
+    if (isExpanded) rowClasses.push('expanded-row');
+    if (isPinned) rowClasses.push('pinned-row');
+
+    const nameChildren = [
+      h('span', { className: `expand-indicator ${isExpanded ? 'open' : ''}` }, '\u25B6'),
+    ];
+    if (isPinned) {
+      nameChildren.push(h('span', { className: 'pin-indicator', title: 'Pinned' }, '\u2605'));
+    }
+    nameChildren.push(h('span', {}, proc.name));
+
+    const row = h('tr', { dataset: { pid: proc.pid }, className: rowClasses.join(' ') }, [
+      h('td', { className: 'col-name', title: proc.name }, nameChildren),
       h('td', { className: 'col-pid' }, proc.pid.toString()),
-      h('td', { className: 'col-port' }, formatPort(proc.ports)),
+      h('td', { className: 'col-port' }, [renderPortCell(proc.ports)]),
       cpuCell,
       ramCell,
       h('td', { className: 'col-uptime' }, formatUptime(proc.started)),

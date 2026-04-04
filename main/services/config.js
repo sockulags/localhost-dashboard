@@ -12,6 +12,10 @@ const DEFAULTS = {
   theme: 'dark',           // 'dark' | 'light'
   customRules: [],         // [{ pattern: string, group: string }]
   profiles: [],            // [{ id, name, services: [{ id, name, pattern, command, cwd }] }]
+  pinnedNames: [],         // [string] — process names pinned to top of their group
+  cpuThreshold: 0,         // percent (0 = disabled)
+  memThresholdMB: 0,       // megabytes (0 = disabled)
+  thresholdSustainPolls: 3, // fire only after N consecutive polls over threshold
 };
 
 const VALID_THEMES = ['dark', 'light'];
@@ -66,6 +70,17 @@ function validate(cfg) {
       return false;
     }
   });
+
+  // pinnedNames: array of strings
+  if (!Array.isArray(result.pinnedNames)) {
+    result.pinnedNames = [];
+  }
+  result.pinnedNames = result.pinnedNames.filter((n) => typeof n === 'string' && n.trim());
+
+  // Thresholds: clamp non-negative numbers
+  result.cpuThreshold = Math.max(0, Math.min(100, Number(result.cpuThreshold) || 0));
+  result.memThresholdMB = Math.max(0, Number(result.memThresholdMB) || 0);
+  result.thresholdSustainPolls = Math.max(1, Math.min(60, Number(result.thresholdSustainPolls) || 3));
 
   // profiles: validate each entry
   if (!Array.isArray(result.profiles)) {

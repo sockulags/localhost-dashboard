@@ -1,4 +1,6 @@
-const { ipcMain, shell, app } = require('electron');
+const { ipcMain, shell, app, dialog, BrowserWindow } = require('electron');
+const fs = require('fs');
+const path = require('path');
 const { collectAll } = require('./poll-manager');
 const { kill, killMultiple } = require('./services/process-killer');
 const { launchCommand } = require('./services/profile-runner');
@@ -56,6 +58,46 @@ function registerIpcHandlers() {
   // ── Profile IPC ──────────────────────────────────────────────
   ipcMain.handle('launch-service-command', (_event, { command, cwd }) => {
     return launchCommand(command, cwd);
+  });
+
+  // ── Open localhost URL in default browser ────────────────────
+  ipcMain.handle('open-url', async (_event, url) => {
+    // Only allow http(s) localhost URLs
+    try {
+      const u = new URL(url);
+      if (!/^https?:$/.test(u.protocol)) return { success: false, error: 'Only http(s) URLs allowed' };
+      const host = u.hostname;
+      if (host !== 'localhost' && host !== '127.0.0.1' && host !== '::1' && host !== '0.0.0.0') {
+        return { success: false, error: 'Only localhost URLs allowed' };
+      }
+      await shell.openExternal(u.toString());
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // ── Export current snapshot to JSON ──────────────────────────
+  ipcMain.handle('export-snapshot', async () => {
+    const data = await collectAll();
+    if (!data) return { success: false, error: 'No data available' };
+
+    const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    const defaultName = `localhost-snapshot-${ts}.json`;
+    const res = await dialog.showSaveDialog(win, {
+      title: 'Export snapshot',
+      defaultPath: path.join(app.getPath('downloads'), defaultName),
+      filters: [{ name: 'JSON', extensions: ['json'] }],
+    });
+    if (res.canceled || !res.filePath) return { success: false, canceled: true };
+
+    try {
+      fs.writeFileSync(res.filePath, JSON.stringify(data, null, 2), 'utf8');
+      return { success: true, path: res.filePath };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   });
 
   // ── Config IPC ───────────────────────────────────────────────
