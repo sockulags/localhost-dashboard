@@ -2,6 +2,7 @@ const HISTORY_MAX = 60;
 
 const AppState = {
   groups: {},
+  containers: [],
   warnings: [],
   lastUpdated: null,
   totalProcesses: 0,
@@ -17,6 +18,7 @@ const AppState = {
     if (!data) return;
     this._recordHistory(data);
     this.groups = data.groups;
+    this.containers = data.containers || [];
     this.warnings = data.warnings;
     this.lastUpdated = data.timestamp;
     this.totalProcesses = data.totalProcesses;
