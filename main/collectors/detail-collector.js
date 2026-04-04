@@ -226,4 +226,37 @@ function parsePsChildren(output) {
   return results;
 }
 
-module.exports = { collect };
+/**
+ * Resolve the executable path for a given PID.
+ * Returns the path string or null if unavailable.
+ */
+function getExecutablePath(pid) {
+  const safePid = parseInt(pid, 10);
+  if (!Number.isFinite(safePid) || safePid <= 0) return null;
+
+  try {
+    if (process.platform === 'win32') {
+      const output = execSync(
+        `wmic process where ProcessId=${safePid} get ExecutablePath /FORMAT:LIST`,
+        EXEC_OPTS
+      );
+      const match = output.match(/ExecutablePath=(.+)/);
+      return match ? match[1].trim() : null;
+    }
+
+    if (process.platform === 'linux') {
+      // readlink on /proc/<pid>/exe gives the actual binary path
+      const output = execSync(`readlink -f /proc/${safePid}/exe`, EXEC_OPTS);
+      const resolved = output.trim();
+      return resolved || null;
+    }
+
+    // macOS: ps -p <pid> -o comm= returns the executable path
+    const output = execSync(`ps -p ${safePid} -o comm=`, EXEC_OPTS);
+    return output.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+module.exports = { collect, getExecutablePath };
