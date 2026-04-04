@@ -47,11 +47,25 @@ const GROUP_META = {
   system: { icon: '⚙️', label: 'System', order: 4 },
 };
 
+const config = require('./config');
+
 function classify(processName, ports) {
   // Strip .exe suffix for cross-platform compatibility
   const name = processName.replace(/\.exe$/i, '');
 
-  // Try name-based classification first
+  // Try user-defined custom rules first (highest priority)
+  const customRules = config.get('customRules') || [];
+  for (const rule of customRules) {
+    try {
+      if (new RegExp(rule.pattern, 'i').test(name)) {
+        return rule.group;
+      }
+    } catch {
+      // Invalid regex — skip
+    }
+  }
+
+  // Try built-in name-based classification
   for (const rule of GROUP_RULES) {
     if (rule.match(name)) {
       return rule.group;
