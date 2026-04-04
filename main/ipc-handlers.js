@@ -1,6 +1,7 @@
 const { ipcMain, shell, app } = require('electron');
 const { collectAll } = require('./poll-manager');
 const { kill, killMultiple } = require('./services/process-killer');
+const { launchCommand } = require('./services/profile-runner');
 const { collect: collectDetails, getExecutablePath } = require('./collectors/detail-collector');
 const { updateTooltip } = require('./tray-manager');
 const notifier = require('./services/notifier');
@@ -50,6 +51,11 @@ function registerIpcHandlers() {
       return { success: true };
     }
     return { success: false, error: 'Could not resolve executable path' };
+  });
+
+  // ── Profile IPC ──────────────────────────────────────────────
+  ipcMain.handle('launch-service-command', (_event, { command, cwd }) => {
+    return launchCommand(command, cwd);
   });
 
   // ── Config IPC ───────────────────────────────────────────────

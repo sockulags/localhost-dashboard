@@ -115,6 +115,9 @@ function renderSettingsBody() {
 
   // ── Custom Grouping Rules ──────────────────────────
   body.appendChild(renderSection('Custom Grouping Rules', renderCustomRules()));
+
+  // ── Profiles ───────────────────────────────────────
+  body.appendChild(renderSection('Profiles', renderProfiles()));
 }
 
 function renderSection(title, content) {
@@ -257,6 +260,110 @@ function renderCustomRules() {
   form.appendChild(groupSelect);
   form.appendChild(addBtn);
   wrapper.appendChild(form);
+
+  return wrapper;
+}
+
+// ── Profiles ───────────────────────────────────────────────
+function renderProfiles() {
+  const wrapper = h('div', { className: 'settings-profiles' });
+  const profiles = settingsConfig.profiles || [];
+
+  if (profiles.length === 0) {
+    wrapper.appendChild(h('p', { className: 'settings-profiles-empty' },
+      'No profiles yet. Right-click any process to add it to a profile.'));
+    return wrapper;
+  }
+
+  for (let pi = 0; pi < profiles.length; pi++) {
+    const profile = profiles[pi];
+    const card = h('div', { className: 'settings-profile-card' });
+
+    // Profile header: name + delete button
+    const header = h('div', { className: 'settings-profile-header' }, [
+      h('span', { className: 'settings-profile-name' }, profile.name),
+      h('button', {
+        className: 'settings-rule-remove',
+        title: 'Delete profile',
+        onClick: () => {
+          const updated = profiles.filter((_, i) => i !== pi);
+          updateSetting('profiles', updated);
+        },
+      }, '\u00D7'),
+    ]);
+    card.appendChild(header);
+
+    // Services list
+    if (profile.services.length > 0) {
+      const serviceList = h('div', { className: 'settings-service-list' });
+
+      for (let si = 0; si < profile.services.length; si++) {
+        const svc = profile.services[si];
+
+        const cmdInput = h('input', {
+          type: 'text',
+          className: 'settings-rule-input settings-svc-cmd',
+          placeholder: 'Start command (optional)',
+          value: svc.command || '',
+        });
+        cmdInput.value = svc.command || '';
+        cmdInput.addEventListener('change', () => {
+          const updated = profiles.map((p, i) => {
+            if (i !== pi) return p;
+            const svcs = p.services.map((s, j) =>
+              j === si ? { ...s, command: cmdInput.value.trim() } : s
+            );
+            return { ...p, services: svcs };
+          });
+          updateSetting('profiles', updated);
+        });
+
+        const cwdInput = h('input', {
+          type: 'text',
+          className: 'settings-rule-input settings-svc-cwd',
+          placeholder: 'Working dir (optional)',
+          value: svc.cwd || '',
+        });
+        cwdInput.value = svc.cwd || '';
+        cwdInput.addEventListener('change', () => {
+          const updated = profiles.map((p, i) => {
+            if (i !== pi) return p;
+            const svcs = p.services.map((s, j) =>
+              j === si ? { ...s, cwd: cwdInput.value.trim() } : s
+            );
+            return { ...p, services: svcs };
+          });
+          updateSetting('profiles', updated);
+        });
+
+        const row = h('div', { className: 'settings-service-row' }, [
+          h('span', { className: 'settings-svc-name' }, svc.name),
+          cmdInput,
+          cwdInput,
+          h('button', {
+            className: 'settings-rule-remove',
+            title: 'Remove service',
+            onClick: () => {
+              const updated = profiles.map((p, i) => {
+                if (i !== pi) return p;
+                return { ...p, services: p.services.filter((_, j) => j !== si) };
+              });
+              updateSetting('profiles', updated);
+            },
+          }, '\u00D7'),
+        ]);
+
+        serviceList.appendChild(row);
+      }
+
+      card.appendChild(serviceList);
+    } else {
+      card.appendChild(h('p', { className: 'settings-profiles-empty' },
+        'No services. Right-click a process to add it here.'));
+    }
+
+    wrapper.appendChild(card);
+  }
 
   return wrapper;
 }

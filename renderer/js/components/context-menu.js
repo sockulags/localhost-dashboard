@@ -1,3 +1,46 @@
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function makeServiceEntry(proc) {
+  return {
+    id: String(Date.now() + Math.floor(Math.random() * 9999)),
+    name: proc.name,
+    pattern: escapeRegex(proc.name),
+    command: '',
+    cwd: '',
+  };
+}
+
+function addProcessToProfile(profileId, proc) {
+  const profiles = AppState.profiles || [];
+  const updated = profiles.map((p) => {
+    if (p.id !== profileId) return p;
+    const alreadyExists = p.services.some((s) => s.pattern === escapeRegex(proc.name));
+    if (alreadyExists) return p;
+    return { ...p, services: [...p.services, makeServiceEntry(proc)] };
+  });
+  window.api.setConfig('profiles', updated).then((cfg) => {
+    AppState.profiles = cfg.profiles || [];
+    window.dispatchEvent(new CustomEvent('config-changed', { detail: cfg }));
+  });
+}
+
+function createProfileWithProcess(proc) {
+  const name = window.prompt('Profile name:');
+  if (!name || !name.trim()) return;
+  const profile = {
+    id: String(Date.now()),
+    name: name.trim(),
+    services: [makeServiceEntry(proc)],
+  };
+  const updated = [...(AppState.profiles || []), profile];
+  window.api.setConfig('profiles', updated).then((cfg) => {
+    AppState.profiles = cfg.profiles || [];
+    window.dispatchEvent(new CustomEvent('config-changed', { detail: cfg }));
+  });
+}
+
 function findProcessesOnPort(port) {
   const results = [];
   for (const group of Object.values(AppState.groups)) {
@@ -53,6 +96,31 @@ function showContextMenu(x, y, proc) {
         },
       });
     }
+  }
+
+  items.push({ separator: true });
+
+  // Add to profile
+  const profiles = AppState.profiles || [];
+  if (profiles.length === 0) {
+    items.push({
+      label: 'Add to new profile...',
+      icon: '+',
+      action: () => createProfileWithProcess(proc),
+    });
+  } else {
+    for (const profile of profiles) {
+      items.push({
+        label: `Add to "${profile.name}"`,
+        icon: '+',
+        action: () => addProcessToProfile(profile.id, proc),
+      });
+    }
+    items.push({
+      label: 'Add to new profile...',
+      icon: '+',
+      action: () => createProfileWithProcess(proc),
+    });
   }
 
   items.push({ separator: true });
