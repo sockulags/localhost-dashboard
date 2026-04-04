@@ -65,6 +65,9 @@ body {
 
 .header-controls {
   -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 #filter-input {
@@ -167,4 +170,26 @@ main#process-groups::-webkit-scrollbar-thumb:hover {
 .btn-secondary {
   background: var(--bg-hover);
   color: var(--text-primary);
+}
+
+/* ── Light theme override ─────────────────────────────── */
+[data-theme="light"] {
+  --bg-primary: #f0f0f3;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e8e8ec;
+  --bg-hover: #dddde3;
+  --text-primary: #1a1b26;
+  --text-secondary: #6b7394;
+  --text-muted: #9ca3bf;
+  --accent-green: #4e8a2f;
+  --accent-blue: #3d6fdb;
+  --accent-red: #d1445b;
+  --accent-amber: #b8860b;
+  --accent-purple: #7c5ec4;
+  --accent-cyan: #1a8cad;
+  --border-color: #d0d3dd;
+}
+
+[data-theme="light"] body {
+  -webkit-font-smoothing: auto;
 }

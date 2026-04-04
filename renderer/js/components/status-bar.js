@@ -5,6 +5,11 @@ window.api.getNotificationsEnabled().then((val) => {
   notificationsEnabled = val;
 });
 
+// Sync when settings panel changes notification config
+window.addEventListener('config-changed', (e) => {
+  notificationsEnabled = e.detail.notifications;
+});
+
 function renderStatusBar() {
   const bar = document.getElementById('status-bar');
   const warningCount = AppState.warnings.length;

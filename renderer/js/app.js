@@ -1,4 +1,5 @@
-const POLL_INTERVAL = 3000;
+let pollInterval = 3000; // will be overridden by config
+let pollTimer = null;
 const GROUP_ORDER = ['dev', 'docker', 'databases', 'apps', 'system'];
 
 let refreshTimer = null;
@@ -97,9 +98,28 @@ function scrollToProcess(pid) {
   });
 }
 
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme || 'dark');
+}
+
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  poll();
+  pollTimer = setInterval(poll, pollInterval);
+}
+
 // Init
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   AppState.subscribe(render);
+
+  // Load config and apply initial settings
+  try {
+    const cfg = await window.api.getConfig();
+    pollInterval = (cfg.pollInterval || 3) * 1000;
+    applyTheme(cfg.theme);
+  } catch {
+    // Config not available yet — use defaults
+  }
 
   // Filter input
   const filterInput = document.getElementById('filter-input');
@@ -107,11 +127,28 @@ document.addEventListener('DOMContentLoaded', () => {
     AppState.setFilter(e.target.value);
   });
 
+  // Settings button
+  const settingsBtn = document.getElementById('settings-btn');
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', openSettings);
+  }
+
+  // Listen for config changes from the settings panel
+  window.addEventListener('config-changed', (e) => {
+    const cfg = e.detail;
+    applyTheme(cfg.theme);
+
+    const newInterval = (cfg.pollInterval || 3) * 1000;
+    if (newInterval !== pollInterval) {
+      pollInterval = newInterval;
+      startPolling();
+    }
+  });
+
   // Listen for notification clicks
   window.api.onScrollToProcess(scrollToProcess);
 
   // Start polling
-  poll();
-  setInterval(poll, POLL_INTERVAL);
+  startPolling();
   startRefreshTimer();
 });

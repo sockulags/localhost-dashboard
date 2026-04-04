@@ -542,3 +542,299 @@
     box-shadow: none;
   }
 }
+
+/* ── Settings gear button ─────────────────────────────── */
+.settings-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  line-height: 1;
+  -webkit-app-region: no-drag;
+}
+
+.settings-btn:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+/* ── Settings modal ───────────────────────────────────── */
+.settings-content {
+  min-width: 440px;
+  max-width: 520px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 20px 24px;
+  text-align: left;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.settings-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.settings-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color var(--transition-speed);
+}
+
+.settings-close:hover {
+  color: var(--text-primary);
+}
+
+/* ── Section ──────────────────────────────────────────── */
+.settings-section {
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.settings-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+/* ── Poll slider ──────────────────────────────────────── */
+.settings-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--border-color);
+  border-radius: 2px;
+  outline: none;
+}
+
+.settings-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  cursor: pointer;
+  border: none;
+}
+
+.settings-poll-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--accent-blue);
+  min-width: 28px;
+  text-align: right;
+}
+
+.settings-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── Theme buttons ────────────────────────────────────── */
+.settings-theme-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-theme-btn {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+}
+
+.settings-theme-btn:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.settings-theme-btn.active {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background: rgba(122, 162, 247, 0.08);
+}
+
+/* ── Toggle button ────────────────────────────────────── */
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-toggle-label {
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.settings-toggle {
+  padding: 3px 10px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all var(--transition-speed);
+}
+
+.settings-toggle.on {
+  background: rgba(158, 206, 106, 0.12);
+  border-color: rgba(158, 206, 106, 0.3);
+  color: var(--accent-green);
+}
+
+.settings-toggle.off {
+  background: transparent;
+  border-color: var(--border-color);
+  color: var(--text-muted);
+}
+
+.settings-toggle:hover {
+  opacity: 0.85;
+}
+
+/* ── Custom rules ─────────────────────────────────────── */
+.settings-rules-list {
+  margin-bottom: 10px;
+}
+
+.settings-rule-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 12px;
+  border-bottom: 1px solid var(--bg-primary);
+}
+
+.settings-rule-pattern {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-cyan);
+  background: var(--bg-primary);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.settings-rule-arrow {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.settings-rule-group {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.group-color-dev { color: var(--accent-green); }
+.group-color-docker { color: var(--accent-blue); }
+.group-color-databases { color: var(--accent-purple); }
+.group-color-apps { color: var(--accent-cyan); }
+.group-color-system { color: var(--text-secondary); }
+
+.settings-rule-remove {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color var(--transition-speed);
+}
+
+.settings-rule-remove:hover {
+  color: var(--accent-red);
+}
+
+.settings-rule-form {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.settings-rule-input {
+  flex: 1;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  outline: none;
+  transition: border-color var(--transition-speed);
+}
+
+.settings-rule-input:focus {
+  border-color: var(--accent-blue);
+}
+
+.settings-rule-input.input-error {
+  border-color: var(--accent-red);
+  animation: shake 0.3s ease;
+}
+
+.settings-rule-select {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  outline: none;
+}
+
+.settings-rule-add {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
