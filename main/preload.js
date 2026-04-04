@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('api', {
   setNotificationsEnabled: (value) => ipcRenderer.invoke('set-notifications-enabled', value),
   getNotificationsEnabled: () => ipcRenderer.invoke('get-notifications-enabled'),
   getProcessDetails: (pid) => ipcRenderer.invoke('get-process-details', pid),
+  openFileLocation: (pid) => ipcRenderer.invoke('open-file-location', pid),
   onScrollToProcess: (callback) => {
     ipcRenderer.on('scroll-to-process', (_event, pid) => callback(pid));
   },
