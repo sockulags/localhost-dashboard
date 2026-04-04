@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
   getProcesses: () => ipcRenderer.invoke('get-processes'),
   killProcess: (pid) => ipcRenderer.invoke('kill-process', pid),
+  killProcesses: (pids) => ipcRenderer.invoke('kill-processes', pids),
   setNotificationsEnabled: (value) => ipcRenderer.invoke('set-notifications-enabled', value),
   getNotificationsEnabled: () => ipcRenderer.invoke('get-notifications-enabled'),
   getProcessDetails: (pid) => ipcRenderer.invoke('get-process-details', pid),

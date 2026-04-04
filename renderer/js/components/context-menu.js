@@ -1,3 +1,15 @@
+function findProcessesOnPort(port) {
+  const results = [];
+  for (const group of Object.values(AppState.groups)) {
+    for (const proc of group.processes) {
+      if (proc.ports && proc.ports.includes(port)) {
+        results.push(proc);
+      }
+    }
+  }
+  return results;
+}
+
 let activeMenu = null;
 
 function showContextMenu(x, y, proc) {
@@ -24,6 +36,23 @@ function showContextMenu(x, y, proc) {
       icon: ':',
       action: () => navigator.clipboard.writeText(proc.ports.join(', ')),
     });
+
+    // "Kill all on port X" for each port this process listens on
+    for (const port of proc.ports) {
+      const procsOnPort = findProcessesOnPort(port);
+      items.push({
+        label: `Kill All on :${port}`,
+        icon: '\u00D7',
+        className: 'context-item-danger',
+        action: () => {
+          showBatchKillConfirm(
+            `Kill all ${procsOnPort.length} process(es) on port ${port}?`,
+            procsOnPort,
+            (pids) => window.api.killProcesses(pids)
+          );
+        },
+      });
+    }
   }
 
   items.push({ separator: true });
