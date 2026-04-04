@@ -918,3 +918,80 @@
   color: var(--accent-cyan);
   margin-left: auto;
 }
+
+/* ── Docker Containers ───────────────────────────────── */
+.group-containers .group-name {
+  color: var(--accent-blue);
+}
+
+.container-table .col-container-name {
+  max-width: 160px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.container-table .col-container-image {
+  max-width: 200px;
+  color: var(--text-secondary);
+}
+
+.container-table .col-container-status {
+  width: 140px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.container-table .col-container-ports {
+  color: var(--accent-cyan);
+  width: 160px;
+}
+
+.container-table .col-container-id {
+  width: 100px;
+  color: var(--text-muted);
+}
+
+.container-state-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.container-state-dot.container-running {
+  background: var(--accent-green);
+  box-shadow: 0 0 4px rgba(158, 206, 106, 0.5);
+}
+
+.container-state-dot.container-paused {
+  background: var(--accent-amber);
+  box-shadow: 0 0 4px rgba(224, 175, 104, 0.5);
+}
+
+.container-state-dot.container-exited {
+  background: var(--accent-red);
+  box-shadow: 0 0 4px rgba(247, 118, 142, 0.5);
+}
+
+.container-state-dot.container-restarting {
+  background: var(--accent-blue);
+  box-shadow: 0 0 4px rgba(122, 162, 247, 0.5);
+}
+
+.container-running {
+  color: var(--accent-green);
+}
+
+.container-paused {
+  color: var(--accent-amber);
+}
+
+.container-exited {
+  color: var(--accent-red);
+}
+
+.container-restarting {
+  color: var(--accent-blue);
+}

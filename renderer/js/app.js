@@ -54,6 +54,15 @@ function render() {
 
     section.appendChild(body);
     container.appendChild(section);
+
+    // Render Docker containers section right after the docker process group
+    if (key === 'docker' && AppState.containers && AppState.containers.length > 0) {
+      hasAny = true;
+      const containerSection = renderContainerSection(AppState.containers);
+      if (containerSection) {
+        container.appendChild(containerSection);
+      }
+    }
   }
 
   if (!hasAny) {
