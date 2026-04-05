@@ -13,6 +13,24 @@ const AppState = {
   expandedPids: new Map(), // pid -> { loading: bool, data: null | {...} }
   listeners: [],
   history: new Map(),
+  pinnedNames: new Set(),
+
+  setPinned(names) {
+    this.pinnedNames = new Set(Array.isArray(names) ? names : []);
+  },
+
+  isPinned(name) {
+    return this.pinnedNames.has(name);
+  },
+
+  togglePin(name) {
+    if (this.pinnedNames.has(name)) {
+      this.pinnedNames.delete(name);
+    } else {
+      this.pinnedNames.add(name);
+    }
+    return Array.from(this.pinnedNames);
+  },
 
   update(data) {
     if (!data) return;
@@ -109,6 +127,11 @@ const AppState = {
     const dir = this.sortDirection === 'asc' ? 1 : -1;
 
     return [...processes].sort((a, b) => {
+      // Pinned processes always float to the top regardless of sort column.
+      const ap = this.pinnedNames.has(a.name) ? 1 : 0;
+      const bp = this.pinnedNames.has(b.name) ? 1 : 0;
+      if (ap !== bp) return bp - ap;
+
       let va, vb;
       switch (col) {
         case 'name':

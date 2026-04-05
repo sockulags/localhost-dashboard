@@ -58,12 +58,26 @@ let activeMenu = null;
 function showContextMenu(x, y, proc) {
   hideContextMenu();
 
+  const isPinned = AppState.isPinned(proc.name);
+
   const items = [
     {
       label: 'Kill Process',
       icon: '\u00D7',
       className: 'context-item-danger',
       action: () => showKillConfirm(proc.pid, proc.name),
+    },
+    { separator: true },
+    {
+      label: isPinned ? 'Unpin' : 'Pin to top',
+      icon: '\u2605',
+      action: () => {
+        const updated = AppState.togglePin(proc.name);
+        window.api.setConfig('pinnedNames', updated).then((cfg) => {
+          AppState.setPinned(cfg.pinnedNames || []);
+          AppState.notify();
+        });
+      },
     },
     { separator: true },
     {
@@ -79,6 +93,15 @@ function showContextMenu(x, y, proc) {
       icon: ':',
       action: () => navigator.clipboard.writeText(proc.ports.join(', ')),
     });
+
+    // "Open in browser" for each port
+    for (const port of proc.ports) {
+      items.push({
+        label: `Open :${port} in browser`,
+        icon: '\u2197',
+        action: () => window.api.openUrl(`http://localhost:${port}`),
+      });
+    }
 
     // "Kill all on port X" for each port this process listens on
     for (const port of proc.ports) {

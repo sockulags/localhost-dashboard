@@ -99,6 +99,12 @@ function renderSettingsBody() {
     settingsConfig.notifications,
   )));
 
+  // ── Resource Thresholds ────────────────────────────
+  body.appendChild(renderSection('Resource Thresholds', renderThresholds()));
+
+  // ── Pinned Processes ───────────────────────────────
+  body.appendChild(renderSection('Pinned Processes', renderPinnedList()));
+
   // ── Minimize to Tray ───────────────────────────────
   body.appendChild(renderSection('System Tray', renderToggle(
     'minimizeToTray',
@@ -188,6 +194,80 @@ function renderToggle(key, label, value) {
 
   wrapper.appendChild(text);
   wrapper.appendChild(toggle);
+  return wrapper;
+}
+
+// ── Resource Thresholds ────────────────────────────────────
+function renderThresholds() {
+  const wrapper = h('div', { className: 'settings-thresholds' });
+
+  const hint = h('p', { className: 'settings-hint' },
+    'Notify when a process sustains high CPU or memory usage. Set to 0 to disable.');
+  wrapper.appendChild(hint);
+
+  const cpuInput = h('input', {
+    type: 'number', min: '0', max: '100', step: '1',
+    className: 'settings-threshold-input',
+  });
+  cpuInput.value = settingsConfig.cpuThreshold || 0;
+  cpuInput.addEventListener('change', () => {
+    updateSetting('cpuThreshold', Number(cpuInput.value) || 0);
+  });
+
+  const memInput = h('input', {
+    type: 'number', min: '0', step: '50',
+    className: 'settings-threshold-input',
+  });
+  memInput.value = settingsConfig.memThresholdMB || 0;
+  memInput.addEventListener('change', () => {
+    updateSetting('memThresholdMB', Number(memInput.value) || 0);
+  });
+
+  const sustainInput = h('input', {
+    type: 'number', min: '1', max: '60', step: '1',
+    className: 'settings-threshold-input',
+  });
+  sustainInput.value = settingsConfig.thresholdSustainPolls || 3;
+  sustainInput.addEventListener('change', () => {
+    updateSetting('thresholdSustainPolls', Number(sustainInput.value) || 3);
+  });
+
+  wrapper.appendChild(h('div', { className: 'settings-threshold-row' }, [
+    h('label', {}, 'CPU %'), cpuInput,
+    h('label', {}, 'Memory MB'), memInput,
+    h('label', {}, 'Sustain polls'), sustainInput,
+  ]));
+
+  return wrapper;
+}
+
+// ── Pinned Processes ────────────────────────────────────────
+function renderPinnedList() {
+  const wrapper = h('div', { className: 'settings-pinned' });
+  const names = settingsConfig.pinnedNames || [];
+
+  if (names.length === 0) {
+    wrapper.appendChild(h('p', { className: 'settings-profiles-empty' },
+      'No pinned processes. Right-click any process to pin it.'));
+    return wrapper;
+  }
+
+  for (let i = 0; i < names.length; i++) {
+    const name = names[i];
+    const row = h('div', { className: 'settings-rule-row' }, [
+      h('span', { className: 'settings-pinned-name' }, name),
+      h('button', {
+        className: 'settings-rule-remove',
+        title: 'Unpin',
+        onClick: () => {
+          const updated = names.filter((_, j) => j !== i);
+          updateSetting('pinnedNames', updated);
+        },
+      }, '\u00D7'),
+    ]);
+    wrapper.appendChild(row);
+  }
+
   return wrapper;
 }
 
