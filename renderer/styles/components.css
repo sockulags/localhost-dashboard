@@ -163,6 +163,32 @@
   color: var(--accent-cyan);
 }
 
+.port-link {
+  color: var(--accent-cyan);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.port-link:hover {
+  text-decoration: underline;
+  color: var(--accent-blue);
+}
+
+.port-more {
+  color: var(--text-muted);
+}
+
+.pin-indicator {
+  display: inline-block;
+  color: var(--accent-amber);
+  font-size: 10px;
+  margin-right: 4px;
+}
+
+.pinned-row {
+  background: rgba(224, 175, 104, 0.04);
+}
+
 .process-table .col-cpu {
   width: 120px;
   text-align: right;
@@ -856,6 +882,45 @@
 .settings-rule-add {
   padding: 4px 10px;
   font-size: 11px;
+}
+
+.settings-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.settings-threshold-row {
+  display: grid;
+  grid-template-columns: auto 70px auto 90px auto 60px;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.settings-threshold-input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  outline: none;
+  transition: border-color var(--transition-speed);
+  width: 100%;
+}
+
+.settings-threshold-input:focus {
+  border-color: var(--accent-blue);
+}
+
+.settings-pinned-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-amber);
 }
 
 @keyframes shake {

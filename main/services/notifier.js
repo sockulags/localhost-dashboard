@@ -7,6 +7,7 @@ let previousKeys = null; // null = first poll (skip notifications)
 let onClickCallback = null;
 
 function warningKey(w) {
+  if (w.key) return w.key;
   return `${w.port}:${w.processName}`;
 }
 
@@ -46,8 +47,12 @@ function notify(warnings) {
 function showNotification(warning) {
   if (!Notification.isSupported()) return;
 
+  let title = 'Port conflict detected';
+  if (warning.key && warning.key.startsWith('cpu:')) title = 'High CPU usage';
+  else if (warning.key && warning.key.startsWith('mem:')) title = 'High memory usage';
+
   const n = new Notification({
-    title: 'Port conflict detected',
+    title,
     body: warning.message,
     silent: false,
   });

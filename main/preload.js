@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('api', {
   getConfig: () => ipcRenderer.invoke('get-config'),
   setConfig: (key, value) => ipcRenderer.invoke('set-config', key, value),
   launchServiceCommand: (command, cwd) => ipcRenderer.invoke('launch-service-command', { command, cwd }),
+  openUrl: (url) => ipcRenderer.invoke('open-url', url),
+  exportSnapshot: () => ipcRenderer.invoke('export-snapshot'),
   onScrollToProcess: (callback) => {
     ipcRenderer.on('scroll-to-process', (_event, pid) => callback(pid));
   },
