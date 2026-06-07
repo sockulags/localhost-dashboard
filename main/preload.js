@@ -16,4 +16,12 @@ contextBridge.exposeInMainWorld('api', {
   onScrollToProcess: (callback) => {
     ipcRenderer.on('scroll-to-process', (_event, pid) => callback(pid));
   },
+  // Custom window controls
+  windowMinimize: () => ipcRenderer.invoke('window-minimize'),
+  windowMaximizeToggle: () => ipcRenderer.invoke('window-maximize-toggle'),
+  windowIsMaximized: () => ipcRenderer.invoke('window-is-maximized'),
+  windowClose: () => ipcRenderer.invoke('window-close'),
+  onWindowState: (callback) => {
+    ipcRenderer.on('window-state', (_event, isMaximized) => callback(isMaximized));
+  },
 });

@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
 const { registerIpcHandlers } = require('./ipc-handlers');
 const { createTray, setQuitting, destroy: destroyTray } = require('./tray-manager');
@@ -7,16 +7,39 @@ const config = require('./services/config');
 
 let mainWindow;
 
-function createWindow() {
-  const theme = config.get('theme');
-  const bgColor = theme === 'light' ? '#f0f0f3' : '#1a1b26';
+// Minimal menu: keep clipboard/editing + reload/devtools accelerators working,
+// but the bar is auto-hidden (Alt reveals it) so it doesn't clutter the window.
+function buildAppMenu() {
+  return Menu.buildFromTemplate([
+    { label: 'Edit', role: 'editMenu' },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+      ],
+    },
+  ]);
+}
 
+function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 750,
     minWidth: 800,
     minHeight: 500,
-    backgroundColor: bgColor,
+    // Transparent bg + Mica so the Windows 11 backdrop shows through the
+    // padding around our opaque cards. (Mica is ignored on Win10.)
+    backgroundColor: '#00000000',
+    backgroundMaterial: 'mica',
+    // Frameless: we draw our own minimal window controls in the header.
+    frame: false,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -26,12 +49,17 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
 
+  // Tell the renderer when the maximize state changes so it can swap the icon.
+  mainWindow.on('maximize', () => mainWindow.webContents.send('window-state', true));
+  mainWindow.on('unmaximize', () => mainWindow.webContents.send('window-state', false));
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
 }
 
 app.whenReady().then(() => {
+  Menu.setApplicationMenu(buildAppMenu());
   registerIpcHandlers();
   createWindow();
   createTray(mainWindow);
