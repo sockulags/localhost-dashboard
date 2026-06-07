@@ -14,10 +14,23 @@
       <h1>Localhost Dashboard</h1>
       <div class="header-controls">
         <input type="text" id="filter-input" placeholder="Filter processes... (press /)" autocomplete="off">
+        <button id="cluster-btn" class="settings-btn" title="Group identical processes">&#9783;</button>
         <button id="export-btn" class="settings-btn" title="Export snapshot (Ctrl+E)">&#8595;</button>
         <button id="settings-btn" class="settings-btn" title="Settings (Ctrl+,)">&#9881;</button>
+        <div class="win-controls">
+          <button id="win-min" class="win-btn" title="Minimize" aria-label="Minimize">
+            <svg viewBox="0 0 14 14" aria-hidden="true"><line x1="3" y1="7" x2="11" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+          <button id="win-max" class="win-btn" title="Maximize" aria-label="Maximize">
+            <svg viewBox="0 0 14 14" aria-hidden="true"><rect x="3.25" y="3.25" width="7.5" height="7.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+          </button>
+          <button id="win-close" class="win-btn win-close" title="Close" aria-label="Close">
+            <svg viewBox="0 0 14 14" aria-hidden="true"><line x1="3.6" y1="3.6" x2="10.4" y2="10.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="10.4" y1="3.6" x2="3.6" y2="10.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+        </div>
       </div>
     </header>
+    <div id="filter-chips" class="filter-chips"></div>
     <div id="profile-panel-container"></div>
     <main id="process-groups"></main>
     <footer id="status-bar"></footer>
@@ -43,7 +56,9 @@
   </div>
   <script src="js/utils/dom.js"></script>
   <script src="js/utils/format.js"></script>
+  <script src="js/utils/reconcile.js"></script>
   <script src="js/state.js"></script>
+  <script src="js/components/toast.js"></script>
   <script src="js/components/group-header.js"></script>
   <script src="js/components/sparkline.js"></script>
   <script src="js/components/context-menu.js"></script>

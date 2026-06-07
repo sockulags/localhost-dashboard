@@ -50,6 +50,7 @@ function showNotification(warning) {
   let title = 'Port conflict detected';
   if (warning.key && warning.key.startsWith('cpu:')) title = 'High CPU usage';
   else if (warning.key && warning.key.startsWith('mem:')) title = 'High memory usage';
+  else if (warning.key && warning.key.startsWith('dup:')) title = 'Too many processes';
 
   const n = new Notification({
     title,

@@ -93,4 +93,34 @@ function detectThresholds(processes, { cpuThreshold, memThresholdMB, sustainPoll
   return warnings;
 }
 
-module.exports = { detect, detectThresholds };
+// Detect "process inflation": many instances of the same dev process name,
+// the classic symptom of an AI agent (or watch script) spawning runaways.
+function detectDuplicates(processes, { duplicateThreshold }) {
+  const warnings = [];
+  if (!duplicateThreshold || duplicateThreshold < 2) return warnings;
+
+  const byName = new Map();
+  for (const proc of processes) {
+    if (proc.group !== 'dev') continue;
+    if (!byName.has(proc.name)) byName.set(proc.name, []);
+    byName.get(proc.name).push(proc);
+  }
+
+  for (const [name, procs] of byName) {
+    if (procs.length >= duplicateThreshold) {
+      warnings.push({
+        pid: procs[0].pid,
+        pids: procs.map((p) => p.pid),
+        port: 0,
+        processName: name,
+        key: `dup:${name}`,
+        count: procs.length,
+        message: `${procs.length} ${name} processes running — possible runaway agent. Group the list to bulk-kill them.`,
+      });
+    }
+  }
+
+  return warnings;
+}
+
+module.exports = { detect, detectThresholds, detectDuplicates };

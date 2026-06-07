@@ -7,13 +7,45 @@ const AppState = {
   lastUpdated: null,
   totalProcesses: 0,
   filter: '',
+  quickFilter: 'all', // 'all' | 'port' | 'idle'
   sortColumn: 'cpu',
   sortDirection: 'desc',
   collapsedGroups: new Set(['system']),
   expandedPids: new Map(), // pid -> { loading: bool, data: null | {...} }
+  expandedClusters: new Set(), // `${groupKey}:${name}` of expanded clusters
+  clusterMode: true, // collapse same-named processes into clusters
   listeners: [],
   history: new Map(),
   pinnedNames: new Set(),
+
+  setQuickFilter(value) {
+    this.quickFilter = value || 'all';
+    this.notify();
+  },
+
+  setClusterMode(value) {
+    this.clusterMode = !!value;
+    this.notify();
+  },
+
+  toggleClusterMode() {
+    this.clusterMode = !this.clusterMode;
+    this.notify();
+    return this.clusterMode;
+  },
+
+  toggleCluster(clusterKey) {
+    if (this.expandedClusters.has(clusterKey)) {
+      this.expandedClusters.delete(clusterKey);
+    } else {
+      this.expandedClusters.add(clusterKey);
+    }
+    this.notify();
+  },
+
+  isClusterExpanded(clusterKey) {
+    return this.expandedClusters.has(clusterKey);
+  },
 
   setPinned(names) {
     this.pinnedNames = new Set(Array.isArray(names) ? names : []);
@@ -104,17 +136,33 @@ const AppState = {
     return this.collapsedGroups.has(groupKey);
   },
 
+  _matchesQuickFilter(p) {
+    switch (this.quickFilter) {
+      case 'port':
+        return p.ports && p.ports.length > 0;
+      case 'idle':
+        // Likely-abandoned: no listening port and effectively no CPU.
+        return (!p.ports || p.ports.length === 0) && p.cpu < 1;
+      default:
+        return true;
+    }
+  },
+
+  _matchesTextFilter(p) {
+    if (!this.filter) return true;
+    return (
+      p.name.toLowerCase().includes(this.filter) ||
+      p.pid.toString().includes(this.filter) ||
+      (p.ports && p.ports.some((port) => port.toString().includes(this.filter)))
+    );
+  },
+
   getFilteredGroups() {
     const result = {};
     for (const [key, group] of Object.entries(this.groups)) {
-      const filtered = this.filter
-        ? group.processes.filter(
-            (p) =>
-              p.name.toLowerCase().includes(this.filter) ||
-              p.pid.toString().includes(this.filter) ||
-              (p.ports && p.ports.some((port) => port.toString().includes(this.filter)))
-          )
-        : group.processes;
+      const filtered = group.processes.filter(
+        (p) => this._matchesTextFilter(p) && this._matchesQuickFilter(p)
+      );
 
       const sorted = this._sortProcesses(filtered);
       result[key] = { ...group, processes: sorted };

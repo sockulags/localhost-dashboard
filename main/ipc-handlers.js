@@ -118,6 +118,27 @@ function registerIpcHandlers() {
 
     return updated;
   });
+
+  // ── Custom window controls (frameless) ───────────────────────
+  const winFrom = (e) => BrowserWindow.fromWebContents(e.sender);
+
+  ipcMain.handle('window-minimize', (e) => {
+    winFrom(e)?.minimize();
+  });
+
+  ipcMain.handle('window-maximize-toggle', (e) => {
+    const win = winFrom(e);
+    if (!win) return false;
+    if (win.isMaximized()) win.unmaximize();
+    else win.maximize();
+    return win.isMaximized();
+  });
+
+  ipcMain.handle('window-is-maximized', (e) => !!winFrom(e)?.isMaximized());
+
+  ipcMain.handle('window-close', (e) => {
+    winFrom(e)?.close();
+  });
 }
 
 module.exports = { registerIpcHandlers };
