@@ -15,8 +15,13 @@
   --border-color: #292e42;
   --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Consolas', 'Courier New', monospace;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --radius: 6px;
-  --transition-speed: 0.2s;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+  --ring: rgba(122, 162, 247, 0.45);
+  --shadow-lg: 0 24px 64px -16px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --transition-speed: 0.15s;
 }
 
 *, *::before, *::after {
@@ -32,7 +37,9 @@ html, body {
 
 body {
   font-family: var(--font-sans);
-  background: var(--bg-primary);
+  /* Transparent so the window's Mica backdrop shows through the gaps around
+     our opaque cards. The header/status bar/cards keep solid backgrounds. */
+  background: transparent;
   color: var(--text-primary);
   font-size: 13px;
   line-height: 1.5;
@@ -49,7 +56,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
+  padding: 0 10px 0 20px;
+  min-height: 46px;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   -webkit-app-region: drag;
@@ -85,6 +93,7 @@ body {
 
 #filter-input:focus {
   border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 #filter-input::placeholder {
@@ -97,21 +106,30 @@ main#process-groups {
   padding: 8px 12px;
 }
 
-main#process-groups::-webkit-scrollbar {
-  width: 8px;
+/* Refined, unobtrusive scrollbars everywhere (shadcn/macOS style) */
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
 }
 
-main#process-groups::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-main#process-groups::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-
-main#process-groups::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb {
   background: var(--text-muted);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 .hidden {
@@ -121,20 +139,35 @@ main#process-groups::-webkit-scrollbar-thumb:hover {
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(13, 14, 22, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: modalFadeIn 0.15s ease;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-content {
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
+  border: 1px solid rgba(192, 202, 245, 0.08);
+  border-radius: var(--radius-lg);
   padding: 24px;
   min-width: 320px;
   text-align: center;
+  box-shadow: var(--shadow-lg);
+  animation: modalPop 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modal-content p {

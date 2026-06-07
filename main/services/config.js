@@ -16,6 +16,8 @@ const DEFAULTS = {
   cpuThreshold: 0,         // percent (0 = disabled)
   memThresholdMB: 0,       // megabytes (0 = disabled)
   thresholdSustainPolls: 3, // fire only after N consecutive polls over threshold
+  duplicateThreshold: 8,   // warn when N+ dev processes share a name (0/1 = disabled)
+  clusterProcesses: true,  // collapse same-named processes into clusters in the UI
 };
 
 const VALID_THEMES = ['dark', 'light'];
@@ -81,6 +83,8 @@ function validate(cfg) {
   result.cpuThreshold = Math.max(0, Math.min(100, Number(result.cpuThreshold) || 0));
   result.memThresholdMB = Math.max(0, Number(result.memThresholdMB) || 0);
   result.thresholdSustainPolls = Math.max(1, Math.min(60, Number(result.thresholdSustainPolls) || 3));
+  result.duplicateThreshold = Math.max(0, Math.min(100, Number(result.duplicateThreshold) || 0));
+  result.clusterProcesses = !!result.clusterProcesses;
 
   // profiles: validate each entry
   if (!Array.isArray(result.profiles)) {

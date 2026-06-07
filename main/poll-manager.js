@@ -3,7 +3,7 @@ const portCollector = require('./collectors/port-collector');
 const systemCollector = require('./collectors/system-collector');
 const dockerCollector = require('./collectors/docker-collector');
 const { classify, GROUP_META } = require('./services/classifier');
-const { detect, detectThresholds } = require('./services/anomaly-detector');
+const { detect, detectThresholds, detectDuplicates } = require('./services/anomaly-detector');
 const config = require('./services/config');
 
 let busy = false;
@@ -84,7 +84,20 @@ async function collectAll() {
       sustainPolls: config.get('thresholdSustainPolls'),
     });
     warnings.push(...thresholdWarnings);
-    const warningPids = new Set(warnings.map((w) => w.pid));
+    const duplicateWarnings = detectDuplicates(merged, {
+      duplicateThreshold: config.get('duplicateThreshold'),
+    });
+    warnings.push(...duplicateWarnings);
+
+    // A warning can cover one pid (w.pid) or many (w.pids, e.g. duplicates).
+    const warningPids = new Set();
+    for (const w of warnings) {
+      if (Array.isArray(w.pids)) {
+        for (const p of w.pids) warningPids.add(p);
+      } else {
+        warningPids.add(w.pid);
+      }
+    }
     for (const proc of merged) {
       proc.hasWarning = warningPids.has(proc.pid);
     }

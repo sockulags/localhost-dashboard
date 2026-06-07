@@ -10,29 +10,13 @@ function renderKillButton(pid, processName) {
 }
 
 function showKillConfirm(pid, processName) {
-  const modal = document.getElementById('confirm-modal');
-  const message = document.getElementById('confirm-message');
-  const yesBtn = document.getElementById('confirm-yes');
-  const noBtn = document.getElementById('confirm-no');
-
-  message.textContent = `Kill ${processName} (PID ${pid})?`;
-  modal.classList.remove('hidden');
-
-  const cleanup = () => {
-    modal.classList.add('hidden');
-    yesBtn.replaceWith(yesBtn.cloneNode(true));
-    noBtn.replaceWith(noBtn.cloneNode(true));
-  };
-
-  yesBtn.addEventListener('click', async () => {
-    cleanup();
-    const result = await window.api.killProcess(pid);
-    if (!result.success) {
-      showError(result.error);
-    }
-  }, { once: true });
-
-  noBtn.addEventListener('click', cleanup, { once: true });
+  // Delayed kill with an Undo window instead of a blocking confirm dialog —
+  // a misclick is recoverable, and the flow doesn't interrupt your work.
+  showUndoToast(
+    `Killing ${processName} (PID ${pid})`,
+    () => window.api.killProcess(pid),
+    { delay: 5000 }
+  );
 }
 
 function showBatchKillConfirm(title, processes, onConfirm) {

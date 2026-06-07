@@ -102,6 +102,9 @@ function renderSettingsBody() {
   // ── Resource Thresholds ────────────────────────────
   body.appendChild(renderSection('Resource Thresholds', renderThresholds()));
 
+  // ── Process Grouping ───────────────────────────────
+  body.appendChild(renderSection('Process Grouping', renderGrouping()));
+
   // ── Pinned Processes ───────────────────────────────
   body.appendChild(renderSection('Pinned Processes', renderPinnedList()));
 
@@ -236,6 +239,38 @@ function renderThresholds() {
     h('label', {}, 'CPU %'), cpuInput,
     h('label', {}, 'Memory MB'), memInput,
     h('label', {}, 'Sustain polls'), sustainInput,
+  ]));
+
+  return wrapper;
+}
+
+// ── Process Grouping ───────────────────────────────────────
+function renderGrouping() {
+  const wrapper = h('div', { className: 'settings-grouping' });
+
+  wrapper.appendChild(h('p', { className: 'settings-hint' },
+    'Collapse identical process names (e.g. many node.exe from an agent) into a single row with a bulk-kill button.'));
+
+  wrapper.appendChild(renderToggle(
+    'clusterProcesses',
+    'Group identical processes',
+    settingsConfig.clusterProcesses !== false,
+  ));
+
+  wrapper.appendChild(h('p', { className: 'settings-hint', style: 'margin-top:12px' },
+    'Warn when this many dev processes share a name. Set to 0 to disable.'));
+
+  const dupInput = h('input', {
+    type: 'number', min: '0', max: '100', step: '1',
+    className: 'settings-threshold-input',
+  });
+  dupInput.value = settingsConfig.duplicateThreshold || 0;
+  dupInput.addEventListener('change', () => {
+    updateSetting('duplicateThreshold', Number(dupInput.value) || 0);
+  });
+
+  wrapper.appendChild(h('div', { className: 'settings-dup-row' }, [
+    h('label', {}, 'Warn at'), dupInput, h('label', {}, 'duplicates'),
   ]));
 
   return wrapper;
