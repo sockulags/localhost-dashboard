@@ -1,7 +1,7 @@
 const { ipcMain, shell, app, dialog, BrowserWindow } = require('electron');
 const fs = require('fs');
 const path = require('path');
-const { collectAll } = require('./poll-manager');
+const { collectAll, getLastSnapshot } = require('./poll-manager');
 const { kill, killMultiple } = require('./services/process-killer');
 const { launchCommand } = require('./services/profile-runner');
 const { collect: collectDetails, getExecutablePath } = require('./collectors/detail-collector');
@@ -101,7 +101,9 @@ function registerIpcHandlers() {
 
   // ── Export current snapshot to JSON ──────────────────────────
   ipcMain.handle('export-snapshot', async () => {
-    const data = await collectAll();
+    // collectAll() returns null when a poll is already in flight;
+    // fall back to the latest successful snapshot instead of failing.
+    const data = (await collectAll()) || getLastSnapshot();
     if (!data) return { success: false, error: 'No data available' };
 
     const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];

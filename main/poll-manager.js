@@ -7,6 +7,7 @@ const { detect, detectThresholds, detectDuplicates } = require('./services/anoma
 const config = require('./services/config');
 
 let busy = false;
+let lastSnapshot = null;
 let dockerCacheCounter = 0;
 const DOCKER_CACHE_RESET_INTERVAL = 10; // Re-check Docker availability every ~10 polls
 
@@ -137,16 +138,22 @@ async function collectAll() {
       return { ...container, matchedPorts };
     });
 
-    return {
+    lastSnapshot = {
       groups,
       containers,
       warnings,
       timestamp: Date.now(),
       totalProcesses: merged.length,
     };
+    return lastSnapshot;
   } finally {
     busy = false;
   }
 }
 
-module.exports = { collectAll };
+/** Latest successful snapshot, for consumers that must not miss a busy poll. */
+function getLastSnapshot() {
+  return lastSnapshot;
+}
+
+module.exports = { collectAll, getLastSnapshot };
