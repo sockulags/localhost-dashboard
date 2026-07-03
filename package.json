@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --inspect",
-    "test": "node --test \"test/*.test.js\""
+    "test": "node --test"
   },
   "dependencies": {
     "systeminformation": "^5.22.0"
