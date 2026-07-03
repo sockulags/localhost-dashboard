@@ -56,8 +56,30 @@ function registerIpcHandlers() {
   });
 
   // ── Profile IPC ──────────────────────────────────────────────
-  ipcMain.handle('launch-service-command', (_event, { command, cwd }) => {
-    return launchCommand(command, cwd);
+  // The renderer only sends profile/service identifiers; the command and
+  // cwd are looked up in the main-process config so an untrusted renderer
+  // can never execute arbitrary command strings.
+  ipcMain.handle('launch-service-command', (_event, { profileId, serviceId } = {}) => {
+    if (typeof profileId !== 'string' || typeof serviceId !== 'string') {
+      return { success: false, error: 'Invalid profile or service id' };
+    }
+
+    const profiles = config.get('profiles') || [];
+    const profile = profiles.find((p) => p.id === profileId);
+    if (!profile) {
+      return { success: false, error: `Unknown profile: ${profileId}` };
+    }
+
+    const service = profile.services.find((s) => s.id === serviceId);
+    if (!service) {
+      return { success: false, error: `Unknown service: ${serviceId}` };
+    }
+
+    if (typeof service.command !== 'string' || !service.command.trim()) {
+      return { success: false, error: 'No command configured for service' };
+    }
+
+    return launchCommand(service.command, service.cwd);
   });
 
   // ── Open localhost URL in default browser ────────────────────

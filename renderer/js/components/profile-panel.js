@@ -13,7 +13,7 @@ function getProfileStatuses(profile) {
 async function startProfile(profile) {
   const services = profile.services.filter((s) => s.command && s.command.trim());
   for (const service of services) {
-    await window.api.launchServiceCommand(service.command, service.cwd);
+    await window.api.launchProfileService(profile.id, service.id);
   }
 }
 

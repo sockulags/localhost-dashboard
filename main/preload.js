@@ -10,7 +10,7 @@ contextBridge.exposeInMainWorld('api', {
   openFileLocation: (pid) => ipcRenderer.invoke('open-file-location', pid),
   getConfig: () => ipcRenderer.invoke('get-config'),
   setConfig: (key, value) => ipcRenderer.invoke('set-config', key, value),
-  launchServiceCommand: (command, cwd) => ipcRenderer.invoke('launch-service-command', { command, cwd }),
+  launchProfileService: (profileId, serviceId) => ipcRenderer.invoke('launch-service-command', { profileId, serviceId }),
   openUrl: (url) => ipcRenderer.invoke('open-url', url),
   exportSnapshot: () => ipcRenderer.invoke('export-snapshot'),
   onScrollToProcess: (callback) => {
