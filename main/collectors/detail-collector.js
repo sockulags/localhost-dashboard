@@ -4,6 +4,22 @@ const { promisify } = require('util');
 const execFileAsync = promisify(execFile);
 
 const EXEC_OPTS = { encoding: 'utf-8', timeout: 5000, windowsHide: true };
+// PowerShell has a slower cold start than plain native tools.
+const PS_EXEC_OPTS = { encoding: 'utf-8', timeout: 10000, windowsHide: true };
+
+/**
+ * Run a PowerShell expression (used instead of wmic, which is removed
+ * in newer Windows 11 builds) and return trimmed stdout.
+ * Callers must only interpolate validated integers into the expression.
+ */
+async function runPowerShell(expression) {
+  const { stdout } = await execFileAsync(
+    'powershell.exe',
+    ['-NoProfile', '-NonInteractive', '-Command', expression],
+    PS_EXEC_OPTS
+  );
+  return stdout.trim();
+}
 
 /**
  * Fetch detailed info for a single process (on-demand, not polled).
@@ -29,13 +45,10 @@ async function collect(pid) {
 async function getCommandLine(pid) {
   try {
     if (process.platform === 'win32') {
-      const { stdout } = await execFileAsync(
-        'wmic',
-        ['process', 'where', `ProcessId=${pid}`, 'get', 'CommandLine', '/FORMAT:LIST'],
-        EXEC_OPTS
+      const stdout = await runPowerShell(
+        `(Get-CimInstance Win32_Process -Filter "ProcessId=${pid}").CommandLine`
       );
-      const match = stdout.match(/CommandLine=(.+)/);
-      return match ? match[1].trim() : '';
+      return stdout;
     }
 
     // Linux/macOS: ps -p <pid> -o args=
@@ -170,25 +183,25 @@ async function getChildren(pid) {
 }
 
 async function getChildrenWindows(pid) {
-  const { stdout } = await execFileAsync(
-    'wmic',
-    ['process', 'where', `ParentProcessId=${pid}`, 'get', 'ProcessId,Name,WorkingSetSize', '/FORMAT:CSV'],
-    EXEC_OPTS
+  const stdout = await runPowerShell(
+    `Get-CimInstance Win32_Process -Filter "ParentProcessId=${pid}" | ` +
+      'Select-Object ProcessId,Name,WorkingSetSize | ConvertTo-Json -Compress'
   );
+  if (!stdout) return [];
+
+  // ConvertTo-Json emits a bare object for a single match, an array otherwise
+  const parsed = JSON.parse(stdout);
+  const entries = Array.isArray(parsed) ? parsed : [parsed];
 
   const results = [];
-  for (const line of stdout.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('Node')) continue;
-
-    // CSV: Node,Name,ProcessId,WorkingSetSize
-    const parts = trimmed.split(',');
-    if (parts.length < 4) continue;
+  for (const entry of entries) {
+    const childPid = parseInt(entry.ProcessId, 10);
+    if (!Number.isFinite(childPid)) continue;
 
     results.push({
-      pid: parseInt(parts[2], 10),
-      name: parts[1],
-      memKB: Math.round(parseInt(parts[3], 10) / 1024) || 0,
+      pid: childPid,
+      name: entry.Name || '',
+      memKB: Math.round(parseInt(entry.WorkingSetSize, 10) / 1024) || 0,
     });
   }
   return results;
@@ -249,13 +262,10 @@ async function getExecutablePath(pid) {
 
   try {
     if (process.platform === 'win32') {
-      const { stdout } = await execFileAsync(
-        'wmic',
-        ['process', 'where', `ProcessId=${safePid}`, 'get', 'ExecutablePath', '/FORMAT:LIST'],
-        EXEC_OPTS
+      const stdout = await runPowerShell(
+        `(Get-CimInstance Win32_Process -Filter "ProcessId=${safePid}").ExecutablePath`
       );
-      const match = stdout.match(/ExecutablePath=(.+)/);
-      return match ? match[1].trim() : null;
+      return stdout || null;
     }
 
     if (process.platform === 'linux') {
