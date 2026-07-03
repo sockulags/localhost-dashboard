@@ -47,7 +47,7 @@ function registerIpcHandlers() {
   });
 
   ipcMain.handle('open-file-location', async (_event, pid) => {
-    const exePath = getExecutablePath(pid);
+    const exePath = await getExecutablePath(pid);
     if (exePath) {
       shell.showItemInFolder(exePath);
       return { success: true };

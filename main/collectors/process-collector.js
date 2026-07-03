@@ -1,4 +1,7 @@
-const { execSync } = require('child_process');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
+
+const execFileAsync = promisify(execFile);
 
 function parseTasklistCSV(output) {
   const processes = [];
@@ -53,15 +56,15 @@ function parsePsOutput(output) {
   return processes;
 }
 
-function collect() {
+async function collect() {
   if (process.platform === 'win32') {
     try {
-      const output = execSync('tasklist /FO CSV /NH', {
+      const { stdout } = await execFileAsync('tasklist', ['/FO', 'CSV', '/NH'], {
         encoding: 'utf-8',
         timeout: 5000,
         windowsHide: true,
       });
-      return parseTasklistCSV(output);
+      return parseTasklistCSV(stdout);
     } catch {
       return [];
     }
@@ -69,19 +72,19 @@ function collect() {
 
   // Linux and macOS: use ps
   try {
-    const output = execSync('ps -eo pid,rss,comm --no-headers', {
+    const { stdout } = await execFileAsync('ps', ['-eo', 'pid,rss,comm', '--no-headers'], {
       encoding: 'utf-8',
       timeout: 5000,
     });
-    return parsePsOutput(output);
+    return parsePsOutput(stdout);
   } catch {
     // macOS ps doesn't support --no-headers, fall back
     try {
-      const output = execSync('ps -eo pid,rss,comm', {
+      const { stdout } = await execFileAsync('ps', ['-eo', 'pid,rss,comm'], {
         encoding: 'utf-8',
         timeout: 5000,
       });
-      return parsePsOutput(output);
+      return parsePsOutput(stdout);
     } catch {
       return [];
     }

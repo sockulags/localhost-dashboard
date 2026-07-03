@@ -1,13 +1,15 @@
-const { execSync } = require('child_process');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
+
+const execFileAsync = promisify(execFile);
 
 let dockerAvailable = null;
 
-function checkDocker() {
+async function checkDocker() {
   try {
-    execSync('docker info', {
+    await execFileAsync('docker', ['info'], {
       encoding: 'utf-8',
       timeout: 3000,
-      stdio: ['pipe', 'pipe', 'pipe'],
       windowsHide: true,
     });
     return true;
@@ -81,10 +83,10 @@ function parsePorts(portStr) {
   return ports;
 }
 
-function collect() {
+async function collect() {
   // Re-check Docker availability periodically (cache for ~30 seconds worth of polls)
   if (dockerAvailable === null) {
-    dockerAvailable = checkDocker();
+    dockerAvailable = await checkDocker();
   }
 
   if (!dockerAvailable) {
@@ -92,17 +94,17 @@ function collect() {
   }
 
   try {
-    const output = execSync(
-      'docker ps --format json --no-trunc',
+    const { stdout } = await execFileAsync(
+      'docker',
+      ['ps', '--format', 'json', '--no-trunc'],
       {
         encoding: 'utf-8',
         timeout: 5000,
-        stdio: ['pipe', 'pipe', 'pipe'],
         windowsHide: true,
       }
     );
 
-    return parseDockerJson(output);
+    return parseDockerJson(stdout);
   } catch {
     // Docker daemon may have stopped
     dockerAvailable = null;

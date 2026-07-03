@@ -1,4 +1,7 @@
-const { execSync } = require('child_process');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
+
+const execFileAsync = promisify(execFile);
 
 const EXEC_OPTS = { encoding: 'utf-8', timeout: 5000, windowsHide: true };
 
@@ -6,37 +9,38 @@ const EXEC_OPTS = { encoding: 'utf-8', timeout: 5000, windowsHide: true };
  * Fetch detailed info for a single process (on-demand, not polled).
  * Returns { commandLine, connections, children }.
  */
-function collect(pid) {
+async function collect(pid) {
   const safePid = parseInt(pid, 10);
   if (!Number.isFinite(safePid) || safePid <= 0) {
     return { commandLine: '', connections: [], children: [] };
   }
 
-  const [commandLine, connections, children] = [
+  const [commandLine, connections, children] = await Promise.all([
     getCommandLine(safePid),
     getConnections(safePid),
     getChildren(safePid),
-  ];
+  ]);
 
   return { commandLine, connections, children };
 }
 
 // --- Command line ---
 
-function getCommandLine(pid) {
+async function getCommandLine(pid) {
   try {
     if (process.platform === 'win32') {
-      const output = execSync(
-        `wmic process where ProcessId=${pid} get CommandLine /FORMAT:LIST`,
+      const { stdout } = await execFileAsync(
+        'wmic',
+        ['process', 'where', `ProcessId=${pid}`, 'get', 'CommandLine', '/FORMAT:LIST'],
         EXEC_OPTS
       );
-      const match = output.match(/CommandLine=(.+)/);
+      const match = stdout.match(/CommandLine=(.+)/);
       return match ? match[1].trim() : '';
     }
 
     // Linux/macOS: ps -p <pid> -o args=
-    const output = execSync(`ps -p ${pid} -o args=`, EXEC_OPTS);
-    return output.trim();
+    const { stdout } = await execFileAsync('ps', ['-p', String(pid), '-o', 'args='], EXEC_OPTS);
+    return stdout.trim();
   } catch {
     return '';
   }
@@ -44,26 +48,26 @@ function getCommandLine(pid) {
 
 // --- Network connections ---
 
-function getConnections(pid) {
+async function getConnections(pid) {
   try {
     if (process.platform === 'win32') {
-      return getConnectionsWindows(pid);
+      return await getConnectionsWindows(pid);
     }
     if (process.platform === 'linux') {
-      return getConnectionsLinux(pid);
+      return await getConnectionsLinux(pid);
     }
-    return getConnectionsMacOS(pid);
+    return await getConnectionsMacOS(pid);
   } catch {
     return [];
   }
 }
 
-function getConnectionsWindows(pid) {
+async function getConnectionsWindows(pid) {
   // netstat -ano gives all connections; filter by PID
-  const output = execSync('netstat -ano', EXEC_OPTS);
+  const { stdout } = await execFileAsync('netstat', ['-ano'], EXEC_OPTS);
   const results = [];
 
-  for (const line of output.split('\n')) {
+  for (const line of stdout.split('\n')) {
     const trimmed = line.trim();
     const parts = trimmed.split(/\s+/);
     if (parts.length < 4) continue;
@@ -83,11 +87,11 @@ function getConnectionsWindows(pid) {
   return results;
 }
 
-function getConnectionsLinux(pid) {
+async function getConnectionsLinux(pid) {
   // ss -tnp: all TCP connections with process info
   try {
-    const output = execSync('ss -tnp', EXEC_OPTS);
-    return parseSSConnections(output, pid);
+    const { stdout } = await execFileAsync('ss', ['-tnp'], EXEC_OPTS);
+    return parseSSConnections(stdout, pid);
   } catch {
     return getConnectionsLsof(pid);
   }
@@ -116,12 +120,16 @@ function getConnectionsMacOS(pid) {
   return getConnectionsLsof(pid);
 }
 
-function getConnectionsLsof(pid) {
+async function getConnectionsLsof(pid) {
   try {
-    const output = execSync(`lsof -iTCP -nP -a -p ${pid}`, EXEC_OPTS);
+    const { stdout } = await execFileAsync(
+      'lsof',
+      ['-iTCP', '-nP', '-a', '-p', String(pid)],
+      EXEC_OPTS
+    );
     const results = [];
 
-    for (const line of output.split('\n')) {
+    for (const line of stdout.split('\n')) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('COMMAND')) continue;
 
@@ -150,25 +158,26 @@ function getConnectionsLsof(pid) {
 
 // --- Child processes ---
 
-function getChildren(pid) {
+async function getChildren(pid) {
   try {
     if (process.platform === 'win32') {
-      return getChildrenWindows(pid);
+      return await getChildrenWindows(pid);
     }
-    return getChildrenUnix(pid);
+    return await getChildrenUnix(pid);
   } catch {
     return [];
   }
 }
 
-function getChildrenWindows(pid) {
-  const output = execSync(
-    `wmic process where ParentProcessId=${pid} get ProcessId,Name,WorkingSetSize /FORMAT:CSV`,
+async function getChildrenWindows(pid) {
+  const { stdout } = await execFileAsync(
+    'wmic',
+    ['process', 'where', `ParentProcessId=${pid}`, 'get', 'ProcessId,Name,WorkingSetSize', '/FORMAT:CSV'],
     EXEC_OPTS
   );
 
   const results = [];
-  for (const line of output.split('\n')) {
+  for (const line of stdout.split('\n')) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('Node')) continue;
 
@@ -185,17 +194,21 @@ function getChildrenWindows(pid) {
   return results;
 }
 
-function getChildrenUnix(pid) {
+async function getChildrenUnix(pid) {
   // Try with --ppid first (Linux), fall back to manual filtering (macOS)
   try {
-    const output = execSync(`ps --ppid ${pid} -o pid,rss,comm --no-headers`, EXEC_OPTS);
-    return parsePsChildren(output);
+    const { stdout } = await execFileAsync(
+      'ps',
+      ['--ppid', String(pid), '-o', 'pid,rss,comm', '--no-headers'],
+      EXEC_OPTS
+    );
+    return parsePsChildren(stdout);
   } catch {
     try {
       // macOS: get all processes with ppid column, filter manually
-      const output = execSync('ps -eo ppid,pid,rss,comm', EXEC_OPTS);
+      const { stdout } = await execFileAsync('ps', ['-eo', 'ppid,pid,rss,comm'], EXEC_OPTS);
       const results = [];
-      for (const line of output.split('\n')) {
+      for (const line of stdout.split('\n')) {
         const match = line.trim().match(/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(.+)$/);
         if (!match) continue;
         if (parseInt(match[1], 10) !== pid) continue;
@@ -230,30 +243,31 @@ function parsePsChildren(output) {
  * Resolve the executable path for a given PID.
  * Returns the path string or null if unavailable.
  */
-function getExecutablePath(pid) {
+async function getExecutablePath(pid) {
   const safePid = parseInt(pid, 10);
   if (!Number.isFinite(safePid) || safePid <= 0) return null;
 
   try {
     if (process.platform === 'win32') {
-      const output = execSync(
-        `wmic process where ProcessId=${safePid} get ExecutablePath /FORMAT:LIST`,
+      const { stdout } = await execFileAsync(
+        'wmic',
+        ['process', 'where', `ProcessId=${safePid}`, 'get', 'ExecutablePath', '/FORMAT:LIST'],
         EXEC_OPTS
       );
-      const match = output.match(/ExecutablePath=(.+)/);
+      const match = stdout.match(/ExecutablePath=(.+)/);
       return match ? match[1].trim() : null;
     }
 
     if (process.platform === 'linux') {
       // readlink on /proc/<pid>/exe gives the actual binary path
-      const output = execSync(`readlink -f /proc/${safePid}/exe`, EXEC_OPTS);
-      const resolved = output.trim();
+      const { stdout } = await execFileAsync('readlink', ['-f', `/proc/${safePid}/exe`], EXEC_OPTS);
+      const resolved = stdout.trim();
       return resolved || null;
     }
 
     // macOS: ps -p <pid> -o comm= returns the executable path
-    const output = execSync(`ps -p ${safePid} -o comm=`, EXEC_OPTS);
-    return output.trim() || null;
+    const { stdout } = await execFileAsync('ps', ['-p', String(safePid), '-o', 'comm='], EXEC_OPTS);
+    return stdout.trim() || null;
   } catch {
     return null;
   }

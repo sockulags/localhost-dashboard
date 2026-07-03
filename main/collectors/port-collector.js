@@ -1,4 +1,7 @@
-const { execSync } = require('child_process');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
+
+const execFileAsync = promisify(execFile);
 
 function parseNetstat(output) {
   const ports = [];
@@ -119,40 +122,40 @@ function parseLsof(output) {
   return ports;
 }
 
-function collect() {
+async function collect() {
   try {
     if (process.platform === 'win32') {
-      const output = execSync('netstat -ano', {
+      const { stdout } = await execFileAsync('netstat', ['-ano'], {
         encoding: 'utf-8',
         timeout: 5000,
         windowsHide: true,
       });
-      return parseNetstat(output);
+      return parseNetstat(stdout);
     }
 
     if (process.platform === 'linux') {
       // Try ss first (modern Linux), fall back to lsof
       try {
-        const output = execSync('ss -tlnp', {
+        const { stdout } = await execFileAsync('ss', ['-tlnp'], {
           encoding: 'utf-8',
           timeout: 5000,
         });
-        return parseSs(output);
+        return parseSs(stdout);
       } catch {
-        const output = execSync('lsof -iTCP -sTCP:LISTEN -nP', {
+        const { stdout } = await execFileAsync('lsof', ['-iTCP', '-sTCP:LISTEN', '-nP'], {
           encoding: 'utf-8',
           timeout: 5000,
         });
-        return parseLsof(output);
+        return parseLsof(stdout);
       }
     }
 
     // macOS: use lsof
-    const output = execSync('lsof -iTCP -sTCP:LISTEN -nP', {
+    const { stdout } = await execFileAsync('lsof', ['-iTCP', '-sTCP:LISTEN', '-nP'], {
       encoding: 'utf-8',
       timeout: 5000,
     });
-    return parseLsof(output);
+    return parseLsof(stdout);
   } catch {
     return [];
   }
