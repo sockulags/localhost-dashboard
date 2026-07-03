@@ -5,7 +5,8 @@
   "main": "main/main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --inspect"
+    "dev": "electron . --inspect",
+    "test": "node --test \"test/*.test.js\""
   },
   "dependencies": {
     "electron": "^33.0.0",

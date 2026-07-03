@@ -88,4 +88,4 @@ function collect() {
   }
 }
 
-module.exports = { collect };
+module.exports = { collect, parseTasklistCSV, parsePsOutput };

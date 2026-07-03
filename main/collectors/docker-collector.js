@@ -115,4 +115,4 @@ function resetCache() {
   dockerAvailable = null;
 }
 
-module.exports = { collect, resetCache };
+module.exports = { collect, resetCache, parseDockerJson, parsePorts };

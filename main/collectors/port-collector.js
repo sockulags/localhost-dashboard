@@ -158,4 +158,4 @@ function collect() {
   }
 }
 
-module.exports = { collect };
+module.exports = { collect, parseNetstat, parseSs, parseLsof };
