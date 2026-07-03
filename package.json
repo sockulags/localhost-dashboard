@@ -9,9 +9,15 @@
     "test": "node --test \"test/*.test.js\""
   },
   "dependencies": {
-    "electron": "^33.0.0",
     "systeminformation": "^5.22.0"
   },
-  "author": "",
-  "license": "MIT"
+  "devDependencies": {
+    "electron": "^33.0.0"
+  },
+  "author": "Lucas Skog",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sockulags/localhost-dashboard"
+  }
 }
