@@ -89,7 +89,7 @@ function registerIpcHandlers() {
       const u = new URL(url);
       if (!/^https?:$/.test(u.protocol)) return { success: false, error: 'Only http(s) URLs allowed' };
       const host = u.hostname;
-      if (host !== 'localhost' && host !== '127.0.0.1' && host !== '::1' && host !== '0.0.0.0') {
+      if (host !== 'localhost' && host !== '127.0.0.1' && host !== '::1') {
         return { success: false, error: 'Only localhost URLs allowed' };
       }
       await shell.openExternal(u.toString());
