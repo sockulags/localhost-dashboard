@@ -26,17 +26,9 @@ function parseNetstat(output) {
     const port = parseInt(localAddr.substring(colonIdx + 1), 10);
     if (isNaN(port)) continue;
 
-    let state = '';
-    let pidStr = '';
-
-    if (protocol === 'TCP') {
-      state = parts[3] || '';
-      pidStr = parts[4] || '';
-    } else {
-      // UDP has no state column
-      state = '';
-      pidStr = parts[3] || '';
-    }
+    // UDP has no state column
+    const state = protocol === 'TCP' ? parts[3] || '' : '';
+    const pidStr = (protocol === 'TCP' ? parts[4] : parts[3]) || '';
 
     const pid = parseInt(pidStr, 10);
     if (isNaN(pid) || pid === 0) continue;

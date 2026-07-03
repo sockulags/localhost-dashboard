@@ -6,13 +6,17 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --inspect",
-    "test": "node --test"
+    "test": "node --test",
+    "lint": "eslint ."
   },
   "dependencies": {
     "systeminformation": "^5.22.0"
   },
   "devDependencies": {
-    "electron": "^33.0.0"
+    "@eslint/js": "^10.0.1",
+    "electron": "^33.0.0",
+    "eslint": "^10.6.0",
+    "globals": "^17.7.0"
   },
   "author": "Lucas Skog",
   "license": "MIT",

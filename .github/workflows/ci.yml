@@ -22,5 +22,8 @@ jobs:
           # The tests only exercise pure parsing logic; skip the Electron binary.
           ELECTRON_SKIP_BINARY_DOWNLOAD: 1
 
+      - name: Lint
+        run: npm run lint
+
       - name: Run tests
         run: npm test
