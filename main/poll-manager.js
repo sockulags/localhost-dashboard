@@ -3,7 +3,7 @@ const portCollector = require('./collectors/port-collector');
 const systemCollector = require('./collectors/system-collector');
 const dockerCollector = require('./collectors/docker-collector');
 const { classify, GROUP_META } = require('./services/classifier');
-const { detect, detectThresholds, detectDuplicates } = require('./services/anomaly-detector');
+const { detect, detectThresholds, detectDuplicates, detectOrphans } = require('./services/anomaly-detector');
 const config = require('./services/config');
 const cpuAccumulator = require('./services/cpu-accumulator');
 const healthCollector = require('./collectors/health-collector');
@@ -74,6 +74,7 @@ async function collectAll() {
 
       merged.push({
         pid: proc.pid,
+        ppid: proc.ppid,
         name: proc.name,
         memKB: proc.memKB,
         cpu: sysInfo ? sysInfo.cpu : 0,
@@ -144,6 +145,15 @@ async function collectAll() {
     }
     // User-defined rules: notify/kill/run a command on sustained metric breaches
     warnings.push(...ruleEngine.evaluate(merged, config.get('userRules'), { kill, launchCommand }));
+    // Orphan detection: dev processes whose parent has disappeared.
+    // Stamp proc.isOrphan (like hasWarning below) so the renderer can badge
+    // rows without re-scanning the warnings list.
+    const orphanWarnings = detectOrphans(merged);
+    warnings.push(...orphanWarnings);
+    const orphanPids = new Set(orphanWarnings.map((w) => w.pid));
+    for (const proc of merged) {
+      proc.isOrphan = orphanPids.has(proc.pid);
+    }
 
     // A warning can cover one pid (w.pid) or many (w.pids, e.g. duplicates).
     const warningPids = new Set();

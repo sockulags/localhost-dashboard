@@ -214,6 +214,12 @@ function populateRow(tr, proc, opts = {}) {
 
   tr.className = 'proc-row';
   if (opts.isClusterChild) tr.classList.add('cluster-child');
+  if (opts.treeDepth) {
+    tr.classList.add('tree-child');
+    tr.style.setProperty('--tree-depth', opts.treeDepth);
+  } else {
+    tr.style.removeProperty('--tree-depth');
+  }
   if (isExpanded) tr.classList.add('expanded-row');
   if (isPinned) tr.classList.add('pinned-row');
   if (proc.hasWarning) tr.classList.add('warning-row');
@@ -221,10 +227,19 @@ function populateRow(tr, proc, opts = {}) {
   const nameChildren = [
     h('span', { className: `expand-indicator ${isExpanded ? 'open' : ''}` }, '▶'),
   ];
+  if (opts.treeDepth) {
+    nameChildren.push(h('span', { className: 'tree-branch' }, '└'));
+  }
   if (isPinned) {
     nameChildren.push(h('span', { className: 'pin-indicator', title: 'Pinned' }, '★'));
   }
   nameChildren.push(h('span', {}, proc.name));
+  if (proc.isOrphan) {
+    nameChildren.push(h('span', {
+      className: 'orphan-badge',
+      title: 'Orphaned: its parent process is gone',
+    }, 'orphan'));
+  }
 
   const cpuCell = h('td', {
     className: `col-cpu ${cpuClass(proc.cpu)}`,
@@ -373,7 +388,49 @@ function buildGroupRowItems(group, groupKey) {
   };
 
   if (!AppState.clusterMode) {
-    for (const proc of procs) pushProcess(proc);
+    // Tree view: indent processes under their in-group parent. Falls back to
+    // the flat list naturally when ppid data is absent (every proc is a root).
+    // Only build the tree under the default CPU sort — nesting reorders rows,
+    // which would silently defeat any sort column the user chose explicitly.
+    if (AppState.sortColumn !== 'cpu') {
+      for (const proc of procs) pushProcess(proc);
+      return items;
+    }
+
+    const pidsInGroup = new Set(procs.map((p) => p.pid));
+    const childrenOf = new Map(); // ppid -> [procs]
+    const roots = [];
+
+    for (const proc of procs) {
+      // Pinned processes always render as roots at the top of the group
+      // (where the sort put them) — pin placement wins over tree nesting.
+      const hasParentInGroup =
+        proc.ppid && proc.ppid !== proc.pid && pidsInGroup.has(proc.ppid) &&
+        !AppState.isPinned(proc.name);
+      if (hasParentInGroup) {
+        if (!childrenOf.has(proc.ppid)) childrenOf.set(proc.ppid, []);
+        childrenOf.get(proc.ppid).push(proc);
+      } else {
+        roots.push(proc);
+      }
+    }
+
+    const visited = new Set();
+    const emit = (proc, depth) => {
+      if (visited.has(proc.pid)) return;
+      visited.add(proc.pid);
+      pushProcess(proc, depth > 0 ? { treeDepth: depth } : undefined);
+      const kids = childrenOf.get(proc.pid);
+      if (kids) {
+        for (const kid of kids) emit(kid, depth + 1);
+      }
+    };
+
+    for (const proc of roots) emit(proc, 0);
+    // Safety net: pid cycles unreachable from any root still get rendered.
+    for (const proc of procs) {
+      if (!visited.has(proc.pid)) emit(proc, 0);
+    }
     return items;
   }
 
