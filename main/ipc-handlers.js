@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { collectAll, getLastSnapshot } = require('./poll-manager');
 const { kill, killMultiple } = require('./services/process-killer');
-const { launchCommand } = require('./services/profile-runner');
+const { launchCommand, getLogs, makeBufferKey } = require('./services/profile-runner');
 const { collect: collectDetails, getExecutablePath } = require('./collectors/detail-collector');
 const { updateTooltip } = require('./tray-manager');
 const notifier = require('./services/notifier');
@@ -80,7 +80,7 @@ function registerIpcHandlers() {
       return { success: false, error: 'No command configured for service' };
     }
 
-    return launchCommand(service.command, service.cwd);
+    return launchCommand(service.command, service.cwd, makeBufferKey(profileId, serviceId));
   });
 
   // ── Open localhost URL in default browser ────────────────────
@@ -176,6 +176,13 @@ function registerIpcHandlers() {
   ipcMain.handle('docker-restart', (_event, id) => dockerCollector.restartContainer(id));
 
   ipcMain.handle('docker-logs', (_event, id, tail) => dockerCollector.getLogs(id, tail));
+  // ── Profile logs ─────────────────────────────────────────────
+  ipcMain.handle('get-service-logs', (_event, { profileId, serviceId } = {}) => {
+    if (typeof profileId !== 'string' || typeof serviceId !== 'string') {
+      return { success: false, error: 'Invalid profile or service id' };
+    }
+    return { success: true, logs: getLogs(makeBufferKey(profileId, serviceId)) };
+  });
 }
 
 module.exports = { registerIpcHandlers };
