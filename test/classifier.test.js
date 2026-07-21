@@ -25,6 +25,7 @@ fs.writeFileSync(
 );
 
 const { classify, GROUP_META } = require('../main/services/classifier');
+const config = require('../main/services/config');
 
 test('classify groups dev tooling by process name', () => {
   assert.strictEqual(classify('node.exe', []), 'dev');
@@ -47,6 +48,16 @@ test('classify recognises docker, database, and app processes', () => {
   assert.strictEqual(classify('slack.exe', []), 'apps');
 });
 
+test('classify groups AI coding agents by process name', () => {
+  assert.strictEqual(classify('claude', []), 'agents');
+  assert.strictEqual(classify('Claude.exe', []), 'agents');
+  assert.strictEqual(classify('aider', []), 'agents');
+  assert.strictEqual(classify('copilot.exe', []), 'agents');
+  assert.strictEqual(classify('codex', []), 'agents');
+  assert.strictEqual(classify('cursor-agent', []), 'agents');
+  assert.strictEqual(classify('gemini', []), 'agents');
+});
+
 test('classify falls back to port-based classification', () => {
   assert.strictEqual(classify('unknown-binary', [5432]), 'databases');
   assert.strictEqual(classify('unknown-binary', [2375]), 'docker');
@@ -64,8 +75,21 @@ test('classify gives user-defined custom rules highest priority', () => {
   assert.strictEqual(classify('myapp-server.exe', [3000]), 'databases');
 });
 
+test('custom rules override the built-in agents group', () => {
+  // Without a matching custom rule, "claude" lands in agents.
+  assert.strictEqual(classify('claude', []), 'agents');
+  // A user rule targeting the same name must win over the built-in agents rule.
+  const original = config.get('customRules');
+  config.set('customRules', [...original, { pattern: '^claude', group: 'apps' }]);
+  try {
+    assert.strictEqual(classify('claude.exe', []), 'apps');
+  } finally {
+    config.set('customRules', original);
+  }
+});
+
 test('GROUP_META covers all classification targets', () => {
-  for (const group of ['dev', 'docker', 'databases', 'apps', 'system']) {
+  for (const group of ['dev', 'agents', 'docker', 'databases', 'apps', 'system']) {
     assert.ok(GROUP_META[group], `missing meta for ${group}`);
     assert.strictEqual(typeof GROUP_META[group].order, 'number');
   }

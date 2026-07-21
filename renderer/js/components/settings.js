@@ -1,8 +1,9 @@
 /* Settings panel – rendered as a modal overlay */
 
-const VALID_GROUPS = ['dev', 'docker', 'databases', 'apps', 'system'];
+const VALID_GROUPS = ['dev', 'agents', 'docker', 'databases', 'apps', 'system'];
 const GROUP_LABELS = {
   dev: 'Dev Processes',
+  agents: 'Agents',
   docker: 'Docker',
   databases: 'Databases',
   apps: 'Apps',

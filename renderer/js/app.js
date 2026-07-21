@@ -2,7 +2,7 @@ let pollInterval = 3000; // will be overridden by config
 let hiddenPollInterval = 15000; // poll cadence while the window is hidden (overridden by config)
 let isHidden = false; // true while the window is hidden/minimized
 let pollTimer = null;
-const GROUP_ORDER = ['dev', 'docker', 'databases', 'apps', 'system'];
+const GROUP_ORDER = ['dev', 'agents', 'docker', 'databases', 'apps', 'system'];
 
 let refreshTimer = null;
 

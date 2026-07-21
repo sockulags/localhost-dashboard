@@ -1,5 +1,12 @@
 const GROUP_RULES = [
   {
+    group: 'agents',
+    icon: '🤖',
+    label: 'Agents',
+    match: (name) =>
+      /^(claude|aider|copilot|codex|cursor-agent|gemini)/i.test(name),
+  },
+  {
     group: 'dev',
     icon: '🟢',
     label: 'Dev Processes',
@@ -41,10 +48,11 @@ const PORT_GROUP_MAP = {
 
 const GROUP_META = {
   dev: { icon: '🟢', label: 'Dev Processes', order: 0 },
-  docker: { icon: '🐳', label: 'Docker', order: 1 },
-  databases: { icon: '🗄️', label: 'Databases', order: 2 },
-  apps: { icon: '🔵', label: 'Apps', order: 3 },
-  system: { icon: '⚙️', label: 'System', order: 4 },
+  agents: { icon: '🤖', label: 'Agents', order: 1 },
+  docker: { icon: '🐳', label: 'Docker', order: 2 },
+  databases: { icon: '🗄️', label: 'Databases', order: 3 },
+  apps: { icon: '🔵', label: 'Apps', order: 4 },
+  system: { icon: '⚙️', label: 'System', order: 5 },
 };
 
 const config = require('./config');
