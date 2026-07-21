@@ -319,6 +319,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // registered (e.g. app launched minimized, or hidden during the config
   // await above) would otherwise be missed; startPolling() below picks it up.
   isHidden = document.visibilityState === 'hidden';
+  // Snapshot diff — compare a saved export against now
+  const importBtn = document.getElementById('import-btn');
+  if (importBtn) {
+    importBtn.addEventListener('click', importAndShowDiff);
+  }
 
   // Start polling
   startPolling();
@@ -370,5 +375,12 @@ function handleGlobalKeys(e) {
   if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
     e.preventDefault();
     openCommandPalette();
+  }
+
+  // Ctrl/Cmd+Shift+E — compare a saved snapshot against now
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'E' || e.key === 'e')) {
+    e.preventDefault();
+    importAndShowDiff();
+    return;
   }
 }
