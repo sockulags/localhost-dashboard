@@ -1615,3 +1615,6 @@
   box-shadow: 0 0 4px rgba(247, 118, 142, 0.5);
   opacity: 1;
 }
+/* ── Agents group ─────────── */
+.group-agents .group-name { color: var(--accent-amber); }
+.group-color-agents { color: var(--accent-amber); }

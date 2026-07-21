@@ -24,7 +24,7 @@ const DEFAULTS = {
 };
 
 const VALID_THEMES = ['dark', 'light'];
-const VALID_GROUPS = ['dev', 'docker', 'databases', 'apps', 'system'];
+const VALID_GROUPS = ['dev', 'agents', 'docker', 'databases', 'apps', 'system'];
 
 let cache = null;
 
