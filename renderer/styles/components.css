@@ -1734,6 +1734,17 @@
   vertical-align: bottom;
 /* ── Snapshot diff ─────────── */
 .diff-content {
+/* ── Event timeline ─────────── */
+.status-timeline-link {
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.status-timeline-link:hover {
+  color: var(--text-primary);
+}
+
+.timeline-content {
   width: 560px;
   max-width: 90vw;
   max-height: 80vh;
@@ -1825,6 +1836,119 @@
 }
 
 .diff-row-name {
+}
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid var(--bg-hover);
+}
+
+.timeline-header h2 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.timeline-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeline-refresh {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.timeline-refresh:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.timeline-chips {
+  display: flex;
+  gap: 6px;
+  padding: 10px 18px;
+}
+
+.timeline-chip {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--bg-hover);
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.timeline-chip:hover {
+  color: var(--text-primary);
+}
+
+.timeline-chip.active {
+  background: var(--bg-hover);
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+}
+
+.timeline-body {
+  overflow-y: auto;
+  padding: 4px 10px 14px;
+  flex: 1;
+  min-height: 120px;
+}
+
+.timeline-empty {
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 18px 8px;
+  text-align: center;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.timeline-item:hover {
+  background: var(--bg-hover);
+}
+
+.timeline-icon {
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+  font-size: 10px;
+}
+
+.timeline-start .timeline-icon {
+  color: var(--accent-green);
+}
+
+.timeline-stop .timeline-icon,
+.timeline-stop .timeline-text {
+  color: var(--text-secondary);
+}
+
+.timeline-warning .timeline-icon,
+.timeline-warning .timeline-text {
+  color: var(--accent-amber);
+}
+
+.timeline-text {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1847,4 +1971,8 @@
 
 .diff-delta-down {
   color: var(--accent-green);
+.timeline-time {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
 }

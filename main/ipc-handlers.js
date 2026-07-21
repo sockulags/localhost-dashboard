@@ -216,6 +216,20 @@ function registerIpcHandlers() {
 
     return { success: true, diff: result, oldTimestamp: oldSnapshot.timestamp || null };
   });
+
+  // ── Event history ────────────────────────────────────────────
+  // Required here (not at the top) to keep this feature's changes
+  // contained to the anchor block.
+  ipcMain.handle('get-event-history', (_event, limit) => {
+    const eventLog = require('./services/event-log');
+    // Invalid/missing limit falls through to event-log's own default (500).
+    const n = Number.isInteger(limit) && limit >= 1 && limit <= 2000 ? limit : undefined;
+    try {
+      return { success: true, events: eventLog.getHistory(n) };
+    } catch (err) {
+      return { success: false, error: err.message, events: [] };
+    }
+  });
 }
 
 module.exports = { registerIpcHandlers };

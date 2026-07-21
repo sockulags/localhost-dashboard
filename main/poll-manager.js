@@ -8,6 +8,7 @@ const config = require('./services/config');
 const cpuAccumulator = require('./services/cpu-accumulator');
 const healthCollector = require('./collectors/health-collector');
 const projectResolver = require('./services/project-resolver');
+const eventLog = require('./services/event-log');
 
 let busy = false;
 let lastSnapshot = null;
@@ -188,6 +189,14 @@ async function collectAll() {
     });
 
     // [anchor: post-poll] — snapshot observers/caches go below this line
+
+    // ── Event history ────────────────────────────────────────
+    // Persist start/stop/warning events; logging must never break polling.
+    try {
+      eventLog.record(merged, warnings);
+    } catch (err) {
+      console.error('event-log record failed:', err.message);
+    }
 
     lastSnapshot = {
       groups,
