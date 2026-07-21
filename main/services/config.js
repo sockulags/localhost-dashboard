@@ -18,6 +18,7 @@ const DEFAULTS = {
   thresholdSustainPolls: 3, // fire only after N consecutive polls over threshold
   duplicateThreshold: 8,   // warn when N+ dev processes share a name (0/1 = disabled)
   clusterProcesses: true,  // collapse same-named processes into clusters in the UI
+  // [anchor: feature keys] — new feature config keys go below this line
 };
 
 const VALID_THEMES = ['dark', 'light'];
@@ -107,6 +108,8 @@ function validate(cfg) {
     });
     return true;
   });
+
+  // [anchor: feature validation] — new feature validation clauses go below this line
 
   return result;
 }

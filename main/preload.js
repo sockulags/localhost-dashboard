@@ -24,4 +24,5 @@ contextBridge.exposeInMainWorld('api', {
   onWindowState: (callback) => {
     ipcRenderer.on('window-state', (_event, isMaximized) => callback(isMaximized));
   },
+  // [anchor: feature methods] — new feature API methods go below this line
 });

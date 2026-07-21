@@ -77,6 +77,8 @@ async function collectAll() {
       });
     }
 
+    // [anchor: enrichers] — per-process enrichment blocks go below this line
+
     // Detect anomalies (port conflicts + resource thresholds)
     const warnings = detect(merged);
     const thresholdWarnings = detectThresholds(merged, {
@@ -89,6 +91,8 @@ async function collectAll() {
       duplicateThreshold: config.get('duplicateThreshold'),
     });
     warnings.push(...duplicateWarnings);
+
+    // [anchor: extra-warnings] — additional warning producers go below this line
 
     // A warning can cover one pid (w.pid) or many (w.pids, e.g. duplicates).
     const warningPids = new Set();
@@ -137,6 +141,8 @@ async function collectAll() {
       }
       return { ...container, matchedPorts };
     });
+
+    // [anchor: post-poll] — snapshot observers/caches go below this line
 
     lastSnapshot = {
       groups,

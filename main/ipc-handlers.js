@@ -163,6 +163,8 @@ function registerIpcHandlers() {
   ipcMain.handle('window-close', (e) => {
     winFrom(e)?.close();
   });
+
+  // [anchor: feature handlers] — new feature IPC handlers go below this line
 }
 
 module.exports = { registerIpcHandlers };
