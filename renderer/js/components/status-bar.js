@@ -36,7 +36,11 @@ function renderStatusBar() {
 
   bar.innerHTML = '';
   bar.appendChild(
-    h('div', { className: 'status-section' }, [
+    h('div', {
+      className: 'status-section status-timeline-link',
+      title: 'Show event timeline',
+      onClick: () => showTimeline(),
+    }, [
       h('span', { className: warningClass }, warningText),
       h('span', {}, `${AppState.totalProcesses} processes`),
     ])

@@ -37,4 +37,7 @@ contextBridge.exposeInMainWorld('api', {
   getServiceLogs: (profileId, serviceId) => ipcRenderer.invoke('get-service-logs', { profileId, serviceId }),
   // ── Snapshot diff
   importSnapshotDiff: () => ipcRenderer.invoke('import-snapshot-diff'),
+
+  // ── Event history
+  getEventHistory: (limit) => ipcRenderer.invoke('get-event-history', limit),
 });
