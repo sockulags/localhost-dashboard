@@ -37,3 +37,16 @@ function formatPort(ports) {
   if (ports.length <= 2) return ports.join(', ');
   return `${ports[0]}, ${ports[1]} +${ports.length - 2}`;
 }
+
+function formatCpuSeconds(sec) {
+  if (typeof sec !== 'number' || !isFinite(sec) || sec < 0) return '—';
+
+  const seconds = Math.floor(sec);
+  if (seconds >= 3600) {
+    // Floor to one decimal so 1h57m reads "1.9h", never a premature "2.0h"
+    const hours = Math.floor(seconds / 360) / 10;
+    return `${hours.toFixed(1)}h`;
+  }
+  if (seconds >= 60) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+  return `${seconds}s`;
+}

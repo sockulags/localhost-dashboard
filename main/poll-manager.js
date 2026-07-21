@@ -5,6 +5,7 @@ const dockerCollector = require('./collectors/docker-collector');
 const { classify, GROUP_META } = require('./services/classifier');
 const { detect, detectThresholds, detectDuplicates } = require('./services/anomaly-detector');
 const config = require('./services/config');
+const cpuAccumulator = require('./services/cpu-accumulator');
 
 let busy = false;
 let lastSnapshot = null;
@@ -78,6 +79,9 @@ async function collectAll() {
     }
 
     // [anchor: enrichers] — per-process enrichment blocks go below this line
+
+    // Accumulate per-process CPU cost (attaches proc.cpuTimeSec)
+    cpuAccumulator.update(merged, Date.now());
 
     // Detect anomalies (port conflicts + resource thresholds)
     const warnings = detect(merged);
