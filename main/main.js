@@ -53,6 +53,18 @@ function createWindow() {
   mainWindow.on('maximize', () => mainWindow.webContents.send('window-state', true));
   mainWindow.on('unmaximize', () => mainWindow.webContents.send('window-state', false));
 
+  // Adaptive polling: tell the renderer when the window is hidden/shown so it
+  // can slow down its poll loop while not visible.
+  const sendVisibility = (visible) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('window-visibility', visible);
+    }
+  };
+  mainWindow.on('hide', () => sendVisibility(false));
+  mainWindow.on('minimize', () => sendVisibility(false));
+  mainWindow.on('show', () => sendVisibility(true));
+  mainWindow.on('restore', () => sendVisibility(true));
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });

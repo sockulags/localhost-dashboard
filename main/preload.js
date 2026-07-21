@@ -25,4 +25,8 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.on('window-state', (_event, isMaximized) => callback(isMaximized));
   },
   // [anchor: feature methods] — new feature API methods go below this line
+  // ── Adaptive polling
+  onWindowVisibility: (callback) => {
+    ipcRenderer.on('window-visibility', (_e, visible) => callback(visible));
+  },
 });

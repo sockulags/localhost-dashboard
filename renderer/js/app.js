@@ -1,4 +1,6 @@
 let pollInterval = 3000; // will be overridden by config
+let hiddenPollInterval = 15000; // poll cadence while the window is hidden (overridden by config)
+let isHidden = false; // true while the window is hidden/minimized
 let pollTimer = null;
 const GROUP_ORDER = ['dev', 'docker', 'databases', 'apps', 'system'];
 
@@ -93,7 +95,7 @@ function render() {
 // Update "last refresh" timer every second
 function startRefreshTimer() {
   refreshTimer = setInterval(() => {
-    if (AppState.lastUpdated) {
+    if (!isHidden && AppState.lastUpdated) {
       renderStatusBar();
     }
   }, 1000);
@@ -208,8 +210,13 @@ function updateClusterBtn() {
 
 function startPolling() {
   if (pollTimer) clearInterval(pollTimer);
-  poll();
-  pollTimer = setInterval(poll, pollInterval);
+  // Skip the immediate poll when the data is still fresh (e.g. rapid
+  // minimize/restore cycles) — the interval below keeps it up to date.
+  if (!AppState.lastUpdated || Date.now() - AppState.lastUpdated >= pollInterval) {
+    poll();
+  }
+  // Hidden cadence never beats the visible one (config allows e.g. 5s hidden / 10s visible).
+  pollTimer = setInterval(poll, isHidden ? Math.max(hiddenPollInterval, pollInterval) : pollInterval);
 }
 
 // Init
@@ -220,6 +227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const cfg = await window.api.getConfig();
     pollInterval = (cfg.pollInterval || 3) * 1000;
+    hiddenPollInterval = (cfg.hiddenPollInterval || 15) * 1000;
     applyTheme(cfg.theme);
     AppState.profiles = cfg.profiles || [];
     AppState.setPinned(cfg.pinnedNames || []);
@@ -271,8 +279,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateClusterBtn();
 
     const newInterval = (cfg.pollInterval || 3) * 1000;
-    if (newInterval !== pollInterval) {
-      pollInterval = newInterval;
+    const newHiddenInterval = (cfg.hiddenPollInterval || 15) * 1000;
+    // Only restart the loop when the interval for the CURRENT visibility
+    // state changed — the other one is picked up on the next hide/show.
+    const activeChanged = isHidden
+      ? newHiddenInterval !== hiddenPollInterval
+      : newInterval !== pollInterval;
+    pollInterval = newInterval;
+    hiddenPollInterval = newHiddenInterval;
+    if (activeChanged) {
       startPolling();
     }
 
@@ -284,6 +299,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Global keyboard shortcuts
   document.addEventListener('keydown', handleGlobalKeys);
+
+  // Adaptive polling: slow the poll loop down while the window is hidden or
+  // minimized, and refresh immediately when it becomes visible again.
+  const handleVisibility = (visible) => {
+    const nowHidden = !visible;
+    if (nowHidden === isHidden) return;
+    isHidden = nowHidden;
+    startPolling(); // picks the cadence from isHidden; polls now only if stale
+  };
+  if (window.api.onWindowVisibility) {
+    window.api.onWindowVisibility(handleVisibility);
+  }
+  // Fallback: page visibility mirrors window hide/show in most cases.
+  document.addEventListener('visibilitychange', () => {
+    handleVisibility(document.visibilityState === 'visible');
+  });
+  // Initial sync — a hide/minimize that happened before these listeners were
+  // registered (e.g. app launched minimized, or hidden during the config
+  // await above) would otherwise be missed; startPolling() below picks it up.
+  isHidden = document.visibilityState === 'hidden';
 
   // Start polling
   startPolling();
