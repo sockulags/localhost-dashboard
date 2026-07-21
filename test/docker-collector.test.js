@@ -1,6 +1,12 @@
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { parseDockerJson, parsePorts } = require('../main/collectors/docker-collector');
+const {
+  parseDockerJson,
+  parsePorts,
+  isValidContainerId,
+  friendlyDockerError,
+  clampTail,
+} = require('../main/collectors/docker-collector');
 
 test('parseDockerJson parses one JSON object per line', () => {
   const output = [
@@ -64,4 +70,77 @@ test('parsePorts parses exposed-but-unbound ports', () => {
 test('parsePorts returns empty array for empty or blank input', () => {
   assert.deepStrictEqual(parsePorts(''), []);
   assert.deepStrictEqual(parsePorts('   '), []);
+});
+
+test('isValidContainerId accepts full and short hex ids', () => {
+  assert.strictEqual(isValidContainerId('abc123def456'), true);
+  assert.strictEqual(
+    isValidContainerId('4e5021d210f65ebe9d0f891f2c7c912d5b1e4c8a9f3b2d1e0c9b8a7f6e5d4c3b'),
+    true
+  );
+});
+
+test('isValidContainerId accepts container names with dots, dashes, underscores', () => {
+  assert.strictEqual(isValidContainerId('my-postgres'), true);
+  assert.strictEqual(isValidContainerId('redis_cache.local'), true);
+  assert.strictEqual(isValidContainerId('Web-App_2.0'), true);
+});
+
+test('isValidContainerId rejects spaces and shell metacharacters', () => {
+  assert.strictEqual(isValidContainerId('abc 123'), false);
+  assert.strictEqual(isValidContainerId('abc;rm -rf /'), false);
+  assert.strictEqual(isValidContainerId('$(whoami)'), false);
+  assert.strictEqual(isValidContainerId('abc`id`'), false);
+  assert.strictEqual(isValidContainerId('abc&def'), false);
+  assert.strictEqual(isValidContainerId('abc|def'), false);
+  // Dashes are legal id characters; the collector passes ids after `--`
+  // so a dash-prefixed value can never be parsed as a docker flag.
+  assert.strictEqual(isValidContainerId('--detach'), true);
+  assert.strictEqual(isValidContainerId('a/b'), false);
+});
+
+test('isValidContainerId rejects empty and non-string values', () => {
+  assert.strictEqual(isValidContainerId(''), false);
+  assert.strictEqual(isValidContainerId(null), false);
+  assert.strictEqual(isValidContainerId(undefined), false);
+  assert.strictEqual(isValidContainerId(123), false);
+  assert.strictEqual(isValidContainerId({}), false);
+});
+
+test('friendlyDockerError maps common docker failures to actionable messages', () => {
+  assert.strictEqual(
+    friendlyDockerError('error during connect: this error may indicate that the docker daemon is not running'),
+    'Docker daemon is not running'
+  );
+  assert.strictEqual(
+    friendlyDockerError('Cannot connect to the Docker daemon at unix:///var/run/docker.sock'),
+    'Docker daemon is not running'
+  );
+  assert.strictEqual(
+    friendlyDockerError('Error response from daemon: No such container: abc123'),
+    'Container no longer exists'
+  );
+  assert.strictEqual(
+    friendlyDockerError('permission denied while trying to connect to the Docker daemon socket'),
+    'Access denied — check Docker permissions'
+  );
+  assert.strictEqual(friendlyDockerError('spawn docker ENOENT'), 'Docker CLI not found');
+});
+
+test('friendlyDockerError falls back to the raw message', () => {
+  assert.strictEqual(friendlyDockerError('some unexpected failure'), 'some unexpected failure');
+  assert.strictEqual(friendlyDockerError('  padded  '), 'padded');
+  assert.strictEqual(friendlyDockerError(''), 'Unknown error');
+  assert.strictEqual(friendlyDockerError(null), 'Unknown error');
+});
+
+test('clampTail clamps invalid or out-of-range tail values to 200', () => {
+  assert.strictEqual(clampTail(50), 50);
+  assert.strictEqual(clampTail(10000), 10000);
+  assert.strictEqual(clampTail(0), 200);
+  assert.strictEqual(clampTail(-5), 200);
+  assert.strictEqual(clampTail(10001), 200);
+  assert.strictEqual(clampTail(3.5), 200);
+  assert.strictEqual(clampTail('200'), 200);
+  assert.strictEqual(clampTail(undefined), 200);
 });

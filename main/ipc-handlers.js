@@ -8,6 +8,7 @@ const { collect: collectDetails, getExecutablePath } = require('./collectors/det
 const { updateTooltip } = require('./tray-manager');
 const notifier = require('./services/notifier');
 const config = require('./services/config');
+const dockerCollector = require('./collectors/docker-collector');
 
 function registerIpcHandlers() {
   // Initialise notifier from saved config
@@ -165,6 +166,16 @@ function registerIpcHandlers() {
   });
 
   // [anchor: feature handlers] — new feature IPC handlers go below this line
+
+  // ── Docker actions ───────────────────────────────────────────
+  // The renderer only sends a container id (plus an optional tail count for
+  // logs); the id is validated inside the collector so an untrusted renderer
+  // can never smuggle arbitrary arguments to the docker CLI.
+  ipcMain.handle('docker-stop', (_event, id) => dockerCollector.stopContainer(id));
+
+  ipcMain.handle('docker-restart', (_event, id) => dockerCollector.restartContainer(id));
+
+  ipcMain.handle('docker-logs', (_event, id, tail) => dockerCollector.getLogs(id, tail));
 }
 
 module.exports = { registerIpcHandlers };
