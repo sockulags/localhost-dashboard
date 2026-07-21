@@ -257,6 +257,14 @@ function registerIpcHandlers() {
       return { success: false, error: err.message };
     }
   });
+
+  // ── Mini-HUD ─────────────────────────────────────────────────
+  // Read-only view of the latest snapshot: no collection, no notifier
+  // side-effects. The HUD polls this so it never races the main window's
+  // polling or consumes new-warning notifications.
+  ipcMain.handle('get-last-snapshot', () => {
+    return getLastSnapshot();
+  });
 }
 
 module.exports = { registerIpcHandlers };

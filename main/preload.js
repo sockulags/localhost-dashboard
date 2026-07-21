@@ -43,4 +43,6 @@ contextBridge.exposeInMainWorld('api', {
 
   // ── Profile suggestions ──────────────────────────────────────
   scanProfileSuggestions: () => ipcRenderer.invoke('scan-profile-suggestions'),
+  // ── Mini-HUD
+  getLastSnapshot: () => ipcRenderer.invoke('get-last-snapshot'),
 });

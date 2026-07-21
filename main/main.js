@@ -6,6 +6,8 @@ const notifier = require('./services/notifier');
 const config = require('./services/config');
 const httpApi = require('./services/http-api');
 const { getLastSnapshot } = require('./poll-manager');
+const { globalShortcut } = require('electron');
+const hudWindow = require('./hud-window');
 
 let mainWindow;
 
@@ -82,7 +84,9 @@ app.whenReady().then(() => {
   app.setLoginItemSettings({ openAtLogin: !!config.get('autostart') });
 
   notifier.onClick((pid) => {
-    if (!mainWindow) return;
+    // The app can be alive with no main window (closed to tray with the
+    // HUD open) — recreate it so notification clicks always land somewhere.
+    if (!mainWindow) createWindow();
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.show();
     mainWindow.focus();
@@ -123,6 +127,14 @@ app.whenReady().then(() => {
         console.error('Kill-from-notification failed:', err);
       });
   });
+  // Mini-HUD global shortcut. Registration can fail when another instance
+  // (or app) already owns the accelerator — warn instead of crashing.
+  const hudShortcutRegistered = globalShortcut.register('CommandOrControl+Alt+L', () =>
+    hudWindow.toggleHud()
+  );
+  if (!hudShortcutRegistered) {
+    console.warn('Failed to register global shortcut CommandOrControl+Alt+L for the Mini-HUD');
+  }
 });
 
 app.on('before-quit', () => {
@@ -135,9 +147,12 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
+  // Keyed on mainWindow (not getAllWindows) — the Mini-HUD is a second
+  // BrowserWindow, so a window-count check would fail to recreate the
+  // dashboard while the HUD is open.
+  if (mainWindow === null) {
     createWindow();
-  } else if (mainWindow) {
+  } else {
     mainWindow.show();
   }
 });
@@ -145,4 +160,6 @@ app.on('activate', () => {
 app.on('will-quit', () => {
   destroyTray();
   httpApi.stop();
+  globalShortcut.unregisterAll();
+  hudWindow.destroyHud();
 });
