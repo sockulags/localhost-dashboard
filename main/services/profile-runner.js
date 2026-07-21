@@ -106,6 +106,11 @@ function launchCommand(command, cwd, bufferKey) {
       child.stderr.on('error', () => {});
     }
 
+    // Spawn failures (e.g. a cwd that no longer exists) surface as an async
+    // 'error' event; without a listener it would crash the main process.
+    child.on('error', (err) => {
+      console.error('Failed to launch command:', err.message);
+    });
     child.unref();
     return { success: true };
   } catch (err) {

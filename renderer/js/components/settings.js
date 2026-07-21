@@ -713,8 +713,9 @@ function renderUserRules() {
       const cwd = cwdInput.value.trim();
       if (action === 'command' && !command) return flashError(commandInput);
 
+      // No id here — config validation assigns one and the validated
+      // config round-trips back into settingsConfig via updateSetting.
       const rule = {
-        id: `rule-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
         pattern,
         metric: metricSelect.value,
         threshold,

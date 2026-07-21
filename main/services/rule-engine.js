@@ -17,6 +17,23 @@
 // when the count reaches sustainPolls, reset on a dip, clean up dead pids.
 const sustainHits = new Map(); // `${ruleId}:${pid}` -> count
 
+// Patterns are identical poll after poll, so compile each one once
+// (null marks a pattern that failed to compile).
+const regexCache = new Map(); // pattern -> RegExp | null
+
+function getRegex(pattern) {
+  if (regexCache.has(pattern)) return regexCache.get(pattern);
+  let regex;
+  try {
+    regex = new RegExp(pattern, 'i');
+  } catch {
+    regex = null;
+  }
+  if (regexCache.size >= 200) regexCache.clear(); // bound growth across rule edits
+  regexCache.set(pattern, regex);
+  return regex;
+}
+
 function evaluate(processes, rules, deps = {}) {
   const warnings = [];
 
@@ -26,17 +43,14 @@ function evaluate(processes, rules, deps = {}) {
   }
 
   const activeKeys = new Set();
+  const launchedCommands = new Set(); // rule ids whose command already ran this poll
 
   for (const rule of rules) {
     if (!rule || typeof rule.pattern !== 'string' || !rule.pattern.trim()) continue;
     if (rule.metric !== 'cpu' && rule.metric !== 'mem') continue;
 
-    let regex;
-    try {
-      regex = new RegExp(rule.pattern, 'i');
-    } catch {
-      continue; // invalid regex — skip the rule entirely
-    }
+    const regex = getRegex(rule.pattern);
+    if (!regex) continue; // invalid regex — skip the rule entirely
 
     const threshold = Number(rule.threshold);
     if (!Number.isFinite(threshold) || threshold <= 0) continue;
@@ -53,7 +67,7 @@ function evaluate(processes, rules, deps = {}) {
         const count = (sustainHits.get(counterKey) || 0) + 1;
         sustainHits.set(counterKey, count);
         if (count === sustainPolls) {
-          warnings.push(fire(rule, proc, value, sustainPolls, deps));
+          warnings.push(fire(rule, proc, value, sustainPolls, deps, launchedCommands));
         }
       } else {
         sustainHits.delete(counterKey); // dip below threshold resets the streak
@@ -69,7 +83,7 @@ function evaluate(processes, rules, deps = {}) {
   return warnings;
 }
 
-function fire(rule, proc, value, sustainPolls, deps) {
+function fire(rule, proc, value, sustainPolls, deps, launchedCommands) {
   const metricLabel = rule.metric === 'cpu'
     ? `${value.toFixed(1)}% CPU`
     : `${value.toFixed(0)} MB`;
@@ -77,11 +91,24 @@ function fire(rule, proc, value, sustainPolls, deps) {
 
   let message;
   if (rule.action === 'kill') {
-    if (typeof deps.kill === 'function') deps.kill(proc.pid);
-    message = `Rule "${rule.pattern}": killed ${subject}`;
+    // process-killer's kill() never throws; it returns { success, error }.
+    const result = typeof deps.kill === 'function' ? deps.kill(proc.pid) : null;
+    message = (result && result.success === false)
+      ? `Rule "${rule.pattern}": failed to kill ${subject} — ${result.error}`
+      : `Rule "${rule.pattern}": killed ${subject}`;
   } else if (rule.action === 'command') {
-    if (typeof deps.launchCommand === 'function') deps.launchCommand(rule.command, rule.cwd);
-    message = `Rule "${rule.pattern}": ran "${rule.command}" — ${subject}`;
+    // Launch the command at most once per rule per poll, even when several
+    // matching pids cross the threshold on the same poll.
+    let result = null;
+    if (!launchedCommands.has(rule.id)) {
+      launchedCommands.add(rule.id);
+      result = typeof deps.launchCommand === 'function'
+        ? deps.launchCommand(rule.command, rule.cwd)
+        : null;
+    }
+    message = (result && result.success === false)
+      ? `Rule "${rule.pattern}": failed to run "${rule.command}" (${result.error}) — ${subject}`
+      : `Rule "${rule.pattern}": ran "${rule.command}" — ${subject}`;
   } else {
     message = `Rule "${rule.pattern}": ${subject}`;
   }
@@ -94,9 +121,10 @@ function fire(rule, proc, value, sustainPolls, deps) {
   };
 }
 
-/** Clear all sustain counters (for tests). */
+/** Clear all sustain counters and cached regexes (for tests). */
 function reset() {
   sustainHits.clear();
+  regexCache.clear();
 }
 
 module.exports = { evaluate, reset };
