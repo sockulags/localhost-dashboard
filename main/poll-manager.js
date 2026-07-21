@@ -7,6 +7,7 @@ const { detect, detectThresholds, detectDuplicates } = require('./services/anoma
 const config = require('./services/config');
 const cpuAccumulator = require('./services/cpu-accumulator');
 const healthCollector = require('./collectors/health-collector');
+const projectResolver = require('./services/project-resolver');
 
 let busy = false;
 let lastSnapshot = null;
@@ -106,6 +107,12 @@ async function collectAll() {
         if (hasAny) proc.portHealth = portHealth;
       }
     }
+    // Project linkage: attach proc.projectName (from the owning process's
+    // working directory: package.json name or compose dir) for processes
+    // that hold listening ports. Mutates procs in place. Non-blocking:
+    // cached names apply immediately, uncached pids resolve in a background
+    // batch and show up on the next poll — the snapshot never waits on it.
+    await projectResolver.resolve(merged);
 
     // Detect anomalies (port conflicts + resource thresholds)
     const warnings = detect(merged);
@@ -121,6 +128,16 @@ async function collectAll() {
     warnings.push(...duplicateWarnings);
 
     // [anchor: extra-warnings] — additional warning producers go below this line
+
+    // Project linkage: annotate port-related warnings with the owning
+    // project name resolved by the enricher above. `!w.port` also skips
+    // warnings that carry the port:0 sentinel (thresholds, duplicates).
+    for (const w of warnings) {
+      if (!w.port) continue;
+      const wPids = Array.isArray(w.pids) ? w.pids : [w.pid];
+      const owner = merged.find((p) => p.projectName && wPids.includes(p.pid));
+      if (owner) w.message += ` (project: ${owner.projectName})`;
+    }
 
     // A warning can cover one pid (w.pid) or many (w.pids, e.g. duplicates).
     const warningPids = new Set();

@@ -153,7 +153,7 @@ function buildProcessThead() {
 }
 
 // ── Port cell ──────────────────────────────────────────────────
-function renderPortCell(ports, portHealth) {
+function renderPortCell(ports, portHealth, projectName) {
   if (!ports || ports.length === 0) return h('span', {}, '—');
 
   const container = h('span', { className: 'port-cell' });
@@ -182,6 +182,10 @@ function renderPortCell(ports, portHealth) {
   });
   if (ports.length > 2) {
     container.appendChild(h('span', { className: 'port-more' }, ` +${ports.length - 2}`));
+  }
+  // Project label sits after (outside) the .port-link elements.
+  if (projectName) {
+    container.appendChild(h('span', { className: 'port-project', title: `Project: ${projectName}` }, projectName));
   }
   return container;
 }
@@ -237,7 +241,7 @@ function populateRow(tr, proc, opts = {}) {
 
   tr.appendChild(h('td', { className: 'col-name', title: proc.name }, nameChildren));
   tr.appendChild(h('td', { className: 'col-pid' }, proc.pid.toString()));
-  tr.appendChild(h('td', { className: 'col-port' }, [renderPortCell(proc.ports, proc.portHealth)]));
+  tr.appendChild(h('td', { className: 'col-port' }, [renderPortCell(proc.ports, proc.portHealth, proc.projectName)]));
   tr.appendChild(cpuCell);
   tr.appendChild(ramCell);
   tr.appendChild(h('td', { className: 'col-uptime' }, formatUptime(proc.started)));
@@ -266,6 +270,7 @@ function clusterAggregate(procs) {
   let oldest = Infinity;
   const portSet = new Set();
   const portHealth = {};
+  const projectSet = new Set();
   let anyWarning = false;
 
   for (const p of procs) {
@@ -274,6 +279,7 @@ function clusterAggregate(procs) {
     if (p.started && p.started < oldest) oldest = p.started;
     if (p.ports) for (const port of p.ports) portSet.add(port);
     if (p.portHealth) Object.assign(portHealth, p.portHealth);
+    if (p.projectName) projectSet.add(p.projectName);
     if (p.hasWarning) anyWarning = true;
   }
 
@@ -283,6 +289,8 @@ function clusterAggregate(procs) {
     oldest: oldest === Infinity ? null : oldest,
     ports: Array.from(portSet).sort((a, b) => a - b),
     portHealth,
+    // Only label the cluster when its members agree on a single project.
+    projectName: projectSet.size === 1 ? projectSet.values().next().value : null,
     anyWarning,
   };
 }
@@ -327,7 +335,7 @@ function populateClusterRow(tr, cluster) {
 
   tr.appendChild(nameCell);
   tr.appendChild(h('td', { className: 'col-pid cluster-pid' }, `${procs.length} pids`));
-  tr.appendChild(h('td', { className: 'col-port' }, [renderPortCell(agg.ports, agg.portHealth)]));
+  tr.appendChild(h('td', { className: 'col-port' }, [renderPortCell(agg.ports, agg.portHealth, agg.projectName)]));
   tr.appendChild(cpuCell);
   tr.appendChild(ramCell);
   tr.appendChild(h('td', { className: 'col-uptime' }, formatUptime(agg.oldest)));

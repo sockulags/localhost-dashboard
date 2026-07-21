@@ -1718,4 +1718,18 @@
   text-align: center;
   color: var(--text-secondary);
   font-size: 13px;
+/* ── Port project labels ─────────── */
+.port-project {
+  margin-left: 6px;
+  font-size: 10px;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+  display: inline-block;
+  vertical-align: bottom;
 }
