@@ -1461,3 +1461,54 @@
 .container-restarting {
   color: var(--accent-blue);
 }
+
+/* ── Docker actions ─────────── */
+.col-container-actions {
+  width: 170px;
+  text-align: right;
+}
+
+.container-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+/* Stop reuses .btn-profile-stop; only restart/logs need new variants. */
+.btn-container-restart {
+  border-color: rgba(224, 175, 104, 0.4);
+  color: var(--accent-amber);
+  background: rgba(224, 175, 104, 0.08);
+}
+
+.btn-container-restart:not(:disabled):hover {
+  background: rgba(224, 175, 104, 0.18);
+}
+
+.btn-container-logs {
+  border-color: rgba(122, 162, 247, 0.4);
+  color: var(--accent-blue);
+  background: rgba(122, 162, 247, 0.08);
+}
+
+.btn-container-logs:not(:disabled):hover,
+.btn-container-logs.logs-open {
+  background: rgba(122, 162, 247, 0.18);
+}
+
+.container-logs-pre {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
