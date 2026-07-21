@@ -1,0 +1,133 @@
+/* Mini-HUD — compact always-on-top window. Uses the CSS variables from
+   main.css; solid background (no Mica in this window). */
+
+body.hud-body {
+  background: var(--bg-primary);
+  overflow: hidden;
+  user-select: none;
+}
+
+#hud {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.hud-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  -webkit-app-region: drag;
+  flex-shrink: 0;
+}
+
+.hud-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-badge {
+  -webkit-app-region: no-drag;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.hud-badge.has-warnings {
+  background: var(--accent-red);
+  color: #fff;
+}
+
+.hud-close {
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-speed), color var(--transition-speed);
+}
+
+.hud-close:hover {
+  background: var(--accent-red);
+  color: #fff;
+}
+
+.hud-close svg {
+  width: 12px;
+  height: 12px;
+}
+
+.hud-list {
+  list-style: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 8px;
+}
+
+.hud-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.hud-row:hover {
+  background: var(--bg-hover);
+}
+
+.hud-name {
+  flex: 1;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-cpu {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-amber);
+  flex-shrink: 0;
+}
+
+.hud-mem {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 62px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.hud-empty {
+  padding: 14px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+}

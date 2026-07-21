@@ -1,6 +1,7 @@
 const { app, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const config = require('./services/config');
+const { toggleHud } = require('./hud-window');
 
 let tray = null;
 let mainWindow = null;
@@ -19,6 +20,10 @@ function createTray(window) {
     {
       label: 'Show',
       click: showWindow,
+    },
+    {
+      label: 'Toggle Mini-HUD',
+      click: toggleHud,
     },
     { type: 'separator' },
     {

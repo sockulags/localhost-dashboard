@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'">
+  <title>Localhost Mini-HUD</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/hud.css">
+</head>
+<body class="hud-body">
+  <div id="hud">
+    <header class="hud-header">
+      <span class="hud-title">Localhost HUD</span>
+      <span id="hud-warnings" class="hud-badge" title="Active warnings">0</span>
+      <button id="hud-close" class="hud-close" title="Hide" aria-label="Hide">
+        <svg viewBox="0 0 14 14" aria-hidden="true"><line x1="3.6" y1="3.6" x2="10.4" y2="10.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="10.4" y1="3.6" x2="3.6" y2="10.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+    <ul id="hud-list" class="hud-list"></ul>
+    <div id="hud-empty" class="hud-empty">Waiting for data&hellip;</div>
+  </div>
+  <script src="js/hud.js"></script>
+</body>
+</html>
