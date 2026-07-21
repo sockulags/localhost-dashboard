@@ -20,6 +20,7 @@ const DEFAULTS = {
   clusterProcesses: true,  // collapse same-named processes into clusters in the UI
   // [anchor: feature keys] — new feature config keys go below this line
   hiddenPollInterval: 15,  // seconds (5–120) — poll cadence while the window is hidden
+  portHealthChecks: true,  // probe listening ports over HTTP and show up/down status
 };
 
 const VALID_THEMES = ['dark', 'light'];
@@ -114,6 +115,7 @@ function validate(cfg) {
 
   // hiddenPollInterval: clamp to 5–120
   result.hiddenPollInterval = Math.max(5, Math.min(120, Number(result.hiddenPollInterval) || DEFAULTS.hiddenPollInterval));
+  result.portHealthChecks = !!result.portHealthChecks;
 
   return result;
 }

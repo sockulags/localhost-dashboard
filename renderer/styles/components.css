@@ -1591,4 +1591,27 @@
 .service-log-empty {
   color: var(--text-secondary);
   font-style: italic;
+/* ── Port health ─────────── */
+.port-health {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+  background: var(--text-muted);
+  opacity: 0.35;
+}
+
+/* Matches .container-state-dot glow so status reads the same in both tables */
+.port-health.port-health-up {
+  background: var(--accent-green);
+  box-shadow: 0 0 4px rgba(158, 206, 106, 0.5);
+  opacity: 1;
+}
+
+.port-health.port-health-down {
+  background: var(--accent-red);
+  box-shadow: 0 0 4px rgba(247, 118, 142, 0.5);
+  opacity: 1;
 }

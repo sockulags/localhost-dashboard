@@ -6,6 +6,7 @@ const { classify, GROUP_META } = require('./services/classifier');
 const { detect, detectThresholds, detectDuplicates } = require('./services/anomaly-detector');
 const config = require('./services/config');
 const cpuAccumulator = require('./services/cpu-accumulator');
+const healthCollector = require('./collectors/health-collector');
 
 let busy = false;
 let lastSnapshot = null;
@@ -82,6 +83,29 @@ async function collectAll() {
 
     // Accumulate per-process CPU cost (attaches proc.cpuTimeSec)
     cpuAccumulator.update(merged, Date.now());
+    // HTTP health checks: attach per-port up/down + latency to web-ish
+    // processes. Only dev/apps groups are probed — databases and system
+    // services don't speak HTTP and would show as permanently down.
+    // collect() is non-blocking: it returns the cached results and
+    // refreshes them in a throttled background probe, so the poll's
+    // snapshot is never delayed. Health may lag one poll.
+    if (config.get('portHealthChecks')) {
+      const HEALTH_GROUPS = new Set(['dev', 'apps']);
+      const webProcs = merged.filter((p) => HEALTH_GROUPS.has(p.group) && p.ports.length > 0);
+      const health = healthCollector.collect(webProcs.flatMap((p) => p.ports));
+      for (const proc of webProcs) {
+        const portHealth = {};
+        let hasAny = false;
+        for (const port of proc.ports) {
+          const status = health.get(port);
+          if (status) {
+            portHealth[port] = status;
+            hasAny = true;
+          }
+        }
+        if (hasAny) proc.portHealth = portHealth;
+      }
+    }
 
     // Detect anomalies (port conflicts + resource thresholds)
     const warnings = detect(merged);
