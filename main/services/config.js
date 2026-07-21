@@ -19,6 +19,7 @@ const DEFAULTS = {
   duplicateThreshold: 8,   // warn when N+ dev processes share a name (0/1 = disabled)
   clusterProcesses: true,  // collapse same-named processes into clusters in the UI
   // [anchor: feature keys] — new feature config keys go below this line
+  hiddenPollInterval: 15,  // seconds (5–120) — poll cadence while the window is hidden
 };
 
 const VALID_THEMES = ['dark', 'light'];
@@ -110,6 +111,9 @@ function validate(cfg) {
   });
 
   // [anchor: feature validation] — new feature validation clauses go below this line
+
+  // hiddenPollInterval: clamp to 5–120
+  result.hiddenPollInterval = Math.max(5, Math.min(120, Number(result.hiddenPollInterval) || DEFAULTS.hiddenPollInterval));
 
   return result;
 }
