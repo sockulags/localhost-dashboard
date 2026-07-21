@@ -2075,3 +2075,8 @@
 .settings-user-rule-command.hidden {
   display: none;
 }
+
+.settings-user-rules .settings-threshold-input.input-error {
+  border-color: var(--accent-red);
+  animation: shake 0.3s ease;
+}

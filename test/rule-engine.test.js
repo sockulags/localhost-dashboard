@@ -132,6 +132,36 @@ test('counters are cleaned up when a pid disappears', () => {
   assert.strictEqual(evaluate(hot, rules, noDeps).length, 1);   // fires at 2
 });
 
+test('command action launches at most once per rule when several pids fire together', () => {
+  const launched = [];
+  const deps = { kill: () => {}, launchCommand: (cmd) => launched.push(cmd) };
+  const rules = [cpuRule({ action: 'command', command: 'npm run cleanup', sustainPolls: 1 })];
+  const hot = [
+    { pid: 70, name: 'node.exe', cpu: 95, memKB: 0 },
+    { pid: 71, name: 'node.exe', cpu: 96, memKB: 0 },
+    { pid: 72, name: 'node.exe', cpu: 97, memKB: 0 },
+  ];
+
+  const warnings = evaluate(hot, rules, deps);
+  assert.strictEqual(warnings.length, 3);          // one warning per pid
+  assert.deepStrictEqual(launched, ['npm run cleanup']); // but a single launch
+});
+
+test('kill failures are reported instead of claiming the process was killed', () => {
+  const deps = {
+    kill: () => ({ success: false, error: 'Access denied' }),
+    launchCommand: () => {},
+  };
+  const rules = [cpuRule({ action: 'kill', sustainPolls: 1 })];
+  const hot = [{ pid: 80, name: 'node.exe', cpu: 99, memKB: 0 }];
+
+  const warnings = evaluate(hot, rules, deps);
+  assert.strictEqual(warnings.length, 1);
+  assert.match(warnings[0].message, /failed to kill node\.exe \(PID 80\)/);
+  assert.match(warnings[0].message, /Access denied/);
+  assert.doesNotMatch(warnings[0].message, /^Rule "node": killed/);
+});
+
 test('empty or missing rule list returns no warnings and clears state', () => {
   const hot = [{ pid: 60, name: 'node.exe', cpu: 90, memKB: 0 }];
   const rules = [cpuRule({ sustainPolls: 2 })];
