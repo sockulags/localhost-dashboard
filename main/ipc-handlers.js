@@ -230,6 +230,28 @@ function registerIpcHandlers() {
       return { success: false, error: err.message, events: [] };
     }
   });
+
+  // ── Profile suggestions ──────────────────────────────────────
+  // Pick a folder, scan it for projects (package.json / docker-compose)
+  // and return suggested service profiles.
+  ipcMain.handle('scan-profile-suggestions', async () => {
+    const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+    const res = await dialog.showOpenDialog(win, {
+      title: 'Scan folder for project suggestions',
+      properties: ['openDirectory'],
+    });
+    if (res.canceled || !res.filePaths || !res.filePaths[0]) {
+      return { success: false, canceled: true };
+    }
+
+    try {
+      const { scan } = require('./services/profile-scanner');
+      const suggestions = scan(res.filePaths[0]);
+      return { success: true, suggestions };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
 }
 
 module.exports = { registerIpcHandlers };

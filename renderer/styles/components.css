@@ -1948,6 +1948,52 @@
 
 .timeline-text {
   flex: 1;
+/* ── Profile suggestions ─────────── */
+.profile-suggestions {
+  margin-top: 10px;
+}
+
+.profile-suggestions-import {
+  font-size: 12px;
+}
+
+.profile-suggestions-panel {
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 6px;
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.03));
+}
+
+.profile-suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 8px 0;
+}
+
+.profile-suggestion-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.profile-suggestion-row:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.05));
+}
+
+.profile-suggestion-check {
+  flex: none;
+}
+
+.profile-suggestion-name {
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1975,4 +2021,26 @@
   flex-shrink: 0;
   color: var(--text-secondary);
   font-size: 11px;
+.profile-suggestion-cmd {
+  flex: none;
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.profile-suggestion-cwd {
+  flex: 0 1 40%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.profile-suggestions-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
 }
