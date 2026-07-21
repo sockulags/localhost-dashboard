@@ -153,7 +153,7 @@ function buildProcessThead() {
 }
 
 // ── Port cell ──────────────────────────────────────────────────
-function renderPortCell(ports) {
+function renderPortCell(ports, portHealth) {
   if (!ports || ports.length === 0) return h('span', {}, '—');
 
   const container = h('span', { className: 'port-cell' });
@@ -164,6 +164,14 @@ function renderPortCell(ports) {
       title: `Open http://localhost:${port}`,
       href: '#',
     }, String(port));
+    const status = portHealth && portHealth[port];
+    if (status) {
+      const dotClass = `port-health ${status.up ? 'port-health-up' : 'port-health-down'}`;
+      const dotTitle = status.up
+        ? (status.latencyMs != null ? `up, ${status.latencyMs} ms` : 'up')
+        : 'down';
+      link.insertBefore(h('span', { className: dotClass, title: dotTitle }), link.firstChild);
+    }
     link.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -229,7 +237,7 @@ function populateRow(tr, proc, opts = {}) {
 
   tr.appendChild(h('td', { className: 'col-name', title: proc.name }, nameChildren));
   tr.appendChild(h('td', { className: 'col-pid' }, proc.pid.toString()));
-  tr.appendChild(h('td', { className: 'col-port' }, [renderPortCell(proc.ports)]));
+  tr.appendChild(h('td', { className: 'col-port' }, [renderPortCell(proc.ports, proc.portHealth)]));
   tr.appendChild(cpuCell);
   tr.appendChild(ramCell);
   tr.appendChild(h('td', { className: 'col-uptime' }, formatUptime(proc.started)));
@@ -257,6 +265,7 @@ function clusterAggregate(procs) {
   let totalMem = 0;
   let oldest = Infinity;
   const portSet = new Set();
+  const portHealth = {};
   let anyWarning = false;
 
   for (const p of procs) {
@@ -264,6 +273,7 @@ function clusterAggregate(procs) {
     totalMem += p.memKB || 0;
     if (p.started && p.started < oldest) oldest = p.started;
     if (p.ports) for (const port of p.ports) portSet.add(port);
+    if (p.portHealth) Object.assign(portHealth, p.portHealth);
     if (p.hasWarning) anyWarning = true;
   }
 
@@ -272,6 +282,7 @@ function clusterAggregate(procs) {
     totalMem,
     oldest: oldest === Infinity ? null : oldest,
     ports: Array.from(portSet).sort((a, b) => a - b),
+    portHealth,
     anyWarning,
   };
 }
@@ -316,7 +327,7 @@ function populateClusterRow(tr, cluster) {
 
   tr.appendChild(nameCell);
   tr.appendChild(h('td', { className: 'col-pid cluster-pid' }, `${procs.length} pids`));
-  tr.appendChild(h('td', { className: 'col-port' }, [renderPortCell(agg.ports)]));
+  tr.appendChild(h('td', { className: 'col-port' }, [renderPortCell(agg.ports, agg.portHealth)]));
   tr.appendChild(cpuCell);
   tr.appendChild(ramCell);
   tr.appendChild(h('td', { className: 'col-uptime' }, formatUptime(agg.oldest)));
