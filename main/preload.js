@@ -35,4 +35,6 @@ contextBridge.exposeInMainWorld('api', {
   dockerLogs: (id, tail) => ipcRenderer.invoke('docker-logs', id, tail),
   // ── Profile logs
   getServiceLogs: (profileId, serviceId) => ipcRenderer.invoke('get-service-logs', { profileId, serviceId }),
+  // ── Snapshot diff
+  importSnapshotDiff: () => ipcRenderer.invoke('import-snapshot-diff'),
 });

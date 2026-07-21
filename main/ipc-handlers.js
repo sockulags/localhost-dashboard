@@ -183,6 +183,39 @@ function registerIpcHandlers() {
     }
     return { success: true, logs: getLogs(makeBufferKey(profileId, serviceId)) };
   });
+
+  // ── Snapshot diff — compare a saved JSON export against now ──
+  const { diff: diffSnapshots } = require('./services/snapshot-differ');
+
+  ipcMain.handle('import-snapshot-diff', async () => {
+    const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+    const res = await dialog.showOpenDialog(win, {
+      title: 'Compare snapshot',
+      defaultPath: app.getPath('downloads'),
+      filters: [{ name: 'JSON', extensions: ['json'] }],
+      properties: ['openFile'],
+    });
+    if (res.canceled || !res.filePaths || !res.filePaths[0]) {
+      return { success: false, canceled: true };
+    }
+
+    let oldSnapshot;
+    try {
+      oldSnapshot = JSON.parse(fs.readFileSync(res.filePaths[0], 'utf8'));
+    } catch (err) {
+      return { success: false, error: `Could not read snapshot: ${err.message}` };
+    }
+
+    // collectAll() returns null when a poll is already in flight;
+    // fall back to the latest successful snapshot instead of failing.
+    const current = (await collectAll()) || getLastSnapshot();
+    if (!current) return { success: false, error: 'No current data available' };
+
+    const result = diffSnapshots(oldSnapshot, current);
+    if (!result) return { success: false, error: 'Not a valid snapshot file' };
+
+    return { success: true, diff: result, oldTimestamp: oldSnapshot.timestamp || null };
+  });
 }
 
 module.exports = { registerIpcHandlers };

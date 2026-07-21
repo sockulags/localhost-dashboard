@@ -121,6 +121,16 @@ const componentGlobals = {
   onCmdPaletteKeyDown: 'writable',
   openCommandPalette: 'writable',
   closeCommandPalette: 'writable',
+  // renderer/js/components/diff-view.js
+  diffKeydownHandler: 'writable',
+  closeDiffView: 'writable',
+  importAndShowDiff: 'writable',
+  formatSigned: 'writable',
+  diffDeltaClass: 'writable',
+  renderDiffProcRow: 'writable',
+  renderDiffChangedRow: 'writable',
+  renderDiffSection: 'writable',
+  showDiffView: 'writable',
 };
 
 const appGlobals = {
