@@ -123,4 +123,47 @@ function detectDuplicates(processes, { duplicateThreshold }) {
   return warnings;
 }
 
-module.exports = { detect, detectThresholds, detectDuplicates };
+// Detect orphaned dev processes — a dev server that outlives its
+// terminal/editor/agent is the classic leftover a runaway agent leaves
+// behind. Limited to the `dev` group so system daemons stay quiet.
+//
+// The orphan signal is platform-specific:
+// - win32 never reparents: an orphan keeps its dead parent's stale pid, so
+//   "ppid not present in the current pid set" is the signal.
+// - linux/darwin reparent orphans to pid 1 (init/launchd) immediately, so a
+//   dangling ppid never survives long enough to observe — being adopted by
+//   pid 1 IS the signal there (dev processes are normally children of a
+//   shell/editor/agent, not of init).
+//
+// `platform` is injectable for tests; defaults to the current platform.
+function detectOrphans(processes, platform = process.platform) {
+  const warnings = [];
+  const pidSet = new Set();
+  for (const proc of processes) pidSet.add(proc.pid);
+
+  for (const proc of processes) {
+    if (proc.group !== 'dev') continue;
+    // ppid 0/undefined means "unknown", not "orphaned"
+    if (!proc.ppid) continue;
+
+    const orphaned = platform === 'win32'
+      ? !pidSet.has(proc.ppid)
+      : proc.ppid === 1 || !pidSet.has(proc.ppid);
+    if (!orphaned) continue;
+
+    const reason = platform === 'win32'
+      ? `its parent process (PID ${proc.ppid}) is gone`
+      : 'its original parent exited and it was adopted by init';
+    warnings.push({
+      pid: proc.pid,
+      port: 0,
+      processName: proc.name,
+      key: `orphan:${proc.pid}`,
+      message: `${proc.name} (PID ${proc.pid}) is orphaned — ${reason}`,
+    });
+  }
+
+  return warnings;
+}
+
+module.exports = { detect, detectThresholds, detectDuplicates, detectOrphans };

@@ -1,6 +1,6 @@
 const { test, beforeEach } = require('node:test');
 const assert = require('node:assert');
-const { detect, detectThresholds, detectDuplicates } = require('../main/services/anomaly-detector');
+const { detect, detectThresholds, detectDuplicates, detectOrphans } = require('../main/services/anomaly-detector');
 
 // detectThresholds keeps per-PID state between calls; passing zeroed
 // thresholds clears it so each test starts fresh.
@@ -105,4 +105,69 @@ test('detectDuplicates is disabled for thresholds below 2', () => {
   ];
   assert.deepStrictEqual(detectDuplicates(procs, { duplicateThreshold: 0 }), []);
   assert.deepStrictEqual(detectDuplicates(procs, { duplicateThreshold: 1 }), []);
+});
+
+test('detectOrphans (win32) flags dev processes whose parent pid is gone', () => {
+  const procs = [
+    { pid: 4, name: 'System', ppid: 0, group: 'system' },
+    { pid: 100, name: 'node.exe', ppid: 4, group: 'dev' },
+    { pid: 200, name: 'vite.exe', ppid: 9999, group: 'dev' }, // parent gone
+  ];
+  const warnings = detectOrphans(procs, 'win32');
+  assert.strictEqual(warnings.length, 1);
+  assert.strictEqual(warnings[0].pid, 200);
+  assert.strictEqual(warnings[0].key, 'orphan:200');
+  assert.strictEqual(warnings[0].processName, 'vite.exe');
+  assert.match(warnings[0].message, /orphaned/i);
+  assert.match(warnings[0].message, /9999/);
+});
+
+test('detectOrphans (linux) flags dev processes reparented to init', () => {
+  // Unix reparents orphans to pid 1 immediately, so a missing ppid is never
+  // observable — adoption by init is the orphan signal instead.
+  const procs = [
+    { pid: 1, name: 'systemd', ppid: 0, group: 'system' },
+    { pid: 100, name: 'bash', ppid: 1, group: 'system' },
+    { pid: 200, name: 'node', ppid: 100, group: 'dev' }, // parent alive
+    { pid: 300, name: 'vite', ppid: 1, group: 'dev' },   // adopted by init
+  ];
+  const warnings = detectOrphans(procs, 'linux');
+  assert.strictEqual(warnings.length, 1);
+  assert.strictEqual(warnings[0].pid, 300);
+  assert.strictEqual(warnings[0].key, 'orphan:300');
+  assert.match(warnings[0].message, /orphaned/i);
+});
+
+test('detectOrphans ignores non-dev groups on both platforms', () => {
+  const procs = [
+    { pid: 1, name: 'systemd', ppid: 0, group: 'system' },
+    { pid: 300, name: 'svchost.exe', ppid: 9999, group: 'system' },
+    { pid: 301, name: 'chrome.exe', ppid: 1, group: 'apps' },
+  ];
+  assert.deepStrictEqual(detectOrphans(procs, 'win32'), []);
+  assert.deepStrictEqual(detectOrphans(procs, 'linux'), []);
+});
+
+test('detectOrphans treats missing or zero ppid as unknown, not orphaned', () => {
+  const procs = [
+    { pid: 400, name: 'node.exe', ppid: 0, group: 'dev' },
+    { pid: 401, name: 'node.exe', group: 'dev' },
+  ];
+  assert.deepStrictEqual(detectOrphans(procs, 'win32'), []);
+  assert.deepStrictEqual(detectOrphans(procs, 'linux'), []);
+});
+
+test('detectOrphans stays quiet when the parent chain is present', () => {
+  const procs = [
+    { pid: 500, name: 'npm.exe', ppid: 0, group: 'dev' },
+    { pid: 501, name: 'node.exe', ppid: 500, group: 'dev' },
+    { pid: 502, name: 'esbuild.exe', ppid: 501, group: 'dev' },
+  ];
+  assert.deepStrictEqual(detectOrphans(procs, 'win32'), []);
+  assert.deepStrictEqual(detectOrphans(procs, 'linux'), []);
+});
+
+test('detectOrphans returns empty for an empty process list', () => {
+  assert.deepStrictEqual(detectOrphans([], 'win32'), []);
+  assert.deepStrictEqual(detectOrphans([], 'linux'), []);
 });

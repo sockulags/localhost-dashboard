@@ -2079,4 +2079,29 @@
 .settings-user-rules .settings-threshold-input.input-error {
   border-color: var(--accent-red);
   animation: shake 0.3s ease;
+/* ── Process tree & orphans ─────────── */
+.tree-child .col-name {
+  padding-left: calc(8px + var(--tree-depth, 1) * 18px);
+  color: var(--text-secondary);
+}
+
+.tree-branch {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  margin-right: 2px;
+  user-select: none;
+}
+
+.orphan-badge {
+  display: inline-block;
+  margin-left: 8px;
+  background: var(--accent-amber);
+  color: var(--bg-primary);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 6px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }

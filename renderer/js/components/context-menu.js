@@ -67,6 +67,33 @@ function showContextMenu(x, y, proc) {
       className: 'context-item-danger',
       action: () => showKillConfirm(proc.pid, proc.name),
     },
+    {
+      label: 'Kill Tree',
+      icon: '\u00D7',
+      className: 'context-item-danger',
+      // Killing a whole tree is more destructive than a single kill, so it
+      // goes through the guarded confirm modal rather than straight to a kill.
+      action: () => {
+        showBatchKillConfirm(
+          `Kill ${proc.name} (PID ${proc.pid}) and all of its child processes?`,
+          [proc],
+          async () => {
+            const result = await window.api.killProcessTree(proc.pid);
+            const killedCount = (result.killed || []).length;
+            const failedCount = (result.failed || []).length;
+            if (result.success) {
+              showToast(`Killed ${killedCount} process(es) in the ${proc.name} tree`, { type: 'success' });
+            } else if (killedCount > 0) {
+              showError(`Killed ${killedCount} process(es), but ${failedCount} could not be killed: ${result.error || 'unknown error'}`);
+            } else {
+              showError(result.error || 'Failed to kill process tree');
+            }
+            // Reporting handled above; keep the batch handler quiet.
+            return { success: true };
+          }
+        );
+      },
+    },
     { separator: true },
     {
       label: isPinned ? 'Unpin' : 'Pin to top',

@@ -10,6 +10,7 @@ const notifier = require('./services/notifier');
 const config = require('./services/config');
 const dockerCollector = require('./collectors/docker-collector');
 const httpApi = require('./services/http-api');
+const { killTree } = require('./services/process-killer');
 
 function registerIpcHandlers() {
   // Initialise notifier from saved config
@@ -264,6 +265,11 @@ function registerIpcHandlers() {
   // polling or consumes new-warning notifications.
   ipcMain.handle('get-last-snapshot', () => {
     return getLastSnapshot();
+  });
+
+  // ── Process tree kill ────────────────────────────────────────
+  ipcMain.handle('kill-process-tree', async (_event, pid) => {
+    return killTree(pid);
   });
 }
 
