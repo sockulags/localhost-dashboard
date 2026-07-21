@@ -22,6 +22,8 @@ const DEFAULTS = {
   hiddenPollInterval: 15,  // seconds (5–120) — poll cadence while the window is hidden
   portHealthChecks: true,  // probe listening ports over HTTP and show up/down status
   userRules: [],           // [{ id, pattern, metric: 'cpu'|'mem', threshold, sustainPolls, action: 'notify'|'kill'|'command', command?, cwd? }]
+  httpApiEnabled: false,   // opt-in local read-only HTTP API
+  httpApiPort: 3999,       // 1024–65535
 };
 
 const VALID_THEMES = ['dark', 'light'];
@@ -113,6 +115,9 @@ function validate(cfg) {
   });
 
   // [anchor: feature validation] — new feature validation clauses go below this line
+  result.httpApiEnabled = !!result.httpApiEnabled;
+  result.httpApiPort = Math.max(1024, Math.min(65535,
+    Math.floor(Number(result.httpApiPort)) || DEFAULTS.httpApiPort));
 
   // hiddenPollInterval: clamp to 5–120
   result.hiddenPollInterval = Math.max(5, Math.min(120, Number(result.hiddenPollInterval) || DEFAULTS.hiddenPollInterval));

@@ -4,6 +4,8 @@ const { registerIpcHandlers } = require('./ipc-handlers');
 const { createTray, setQuitting, destroy: destroyTray } = require('./tray-manager');
 const notifier = require('./services/notifier');
 const config = require('./services/config');
+const httpApi = require('./services/http-api');
+const { getLastSnapshot } = require('./poll-manager');
 
 let mainWindow;
 
@@ -88,6 +90,11 @@ app.whenReady().then(() => {
       mainWindow.webContents.send('scroll-to-process', pid);
     }
   });
+
+  // Opt-in local read-only HTTP API (off by default)
+  if (config.get('httpApiEnabled')) {
+    httpApi.start({ getSnapshot: getLastSnapshot, port: config.get('httpApiPort') });
+  }
 });
 
 app.on('before-quit', () => {
@@ -109,4 +116,5 @@ app.on('activate', () => {
 
 app.on('will-quit', () => {
   destroyTray();
+  httpApi.stop();
 });

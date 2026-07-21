@@ -9,6 +9,7 @@ const { updateTooltip } = require('./tray-manager');
 const notifier = require('./services/notifier');
 const config = require('./services/config');
 const dockerCollector = require('./collectors/docker-collector');
+const httpApi = require('./services/http-api');
 
 function registerIpcHandlers() {
   // Initialise notifier from saved config
@@ -139,6 +140,10 @@ function registerIpcHandlers() {
     }
     if (key === 'autostart') {
       app.setLoginItemSettings({ openAtLogin: !!value });
+    }
+    if (key === 'httpApiEnabled' || key === 'httpApiPort') {
+      if (updated.httpApiEnabled) httpApi.restart({ getSnapshot: getLastSnapshot, port: updated.httpApiPort });
+      else httpApi.stop();
     }
 
     return updated;
