@@ -33,4 +33,6 @@ contextBridge.exposeInMainWorld('api', {
   dockerStop: (id) => ipcRenderer.invoke('docker-stop', id),
   dockerRestart: (id) => ipcRenderer.invoke('docker-restart', id),
   dockerLogs: (id, tail) => ipcRenderer.invoke('docker-logs', id, tail),
+  // ── Profile logs
+  getServiceLogs: (profileId, serviceId) => ipcRenderer.invoke('get-service-logs', { profileId, serviceId }),
 });
