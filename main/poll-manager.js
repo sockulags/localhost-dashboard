@@ -9,6 +9,9 @@ const cpuAccumulator = require('./services/cpu-accumulator');
 const healthCollector = require('./collectors/health-collector');
 const projectResolver = require('./services/project-resolver');
 const eventLog = require('./services/event-log');
+const ruleEngine = require('./services/rule-engine');
+const { kill } = require('./services/process-killer');
+const { launchCommand } = require('./services/profile-runner');
 
 let busy = false;
 let lastSnapshot = null;
@@ -139,6 +142,8 @@ async function collectAll() {
       const owner = merged.find((p) => p.projectName && wPids.includes(p.pid));
       if (owner) w.message += ` (project: ${owner.projectName})`;
     }
+    // User-defined rules: notify/kill/run a command on sustained metric breaches
+    warnings.push(...ruleEngine.evaluate(merged, config.get('userRules'), { kill, launchCommand }));
 
     // A warning can cover one pid (w.pid) or many (w.pids, e.g. duplicates).
     const warningPids = new Set();

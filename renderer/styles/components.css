@@ -1529,6 +1529,30 @@
   display: flex;
   align-items: center;
   gap: 6px;
+/* ── Rule engine ─────────── */
+.settings-user-rules .settings-user-rule-desc {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-user-rule-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-user-rule-fields {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.settings-user-rule-fields label {
   font-size: 11px;
   color: var(--text-secondary);
 }
@@ -2043,4 +2067,11 @@
   display: flex;
   gap: 8px;
   margin-top: 8px;
+.settings-user-rule-command {
+  display: flex;
+  gap: 6px;
+}
+
+.settings-user-rule-command.hidden {
+  display: none;
 }

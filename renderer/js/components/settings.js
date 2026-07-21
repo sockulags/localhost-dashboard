@@ -128,6 +128,9 @@ function renderSettingsBody() {
 
   // ── Profiles ───────────────────────────────────────
   body.appendChild(renderSection('Profiles', renderProfiles()));
+
+  // ── Rules (rule engine) ────────────────────────────
+  body.appendChild(renderSection('Rules', renderUserRules()));
 }
 
 function renderSection(title, content) {
@@ -596,5 +599,150 @@ function renderProfileSuggestions(profiles) {
   ]));
 
   wrapper.appendChild(panel);
+  return wrapper;
+}
+
+// ── Rules (user-defined rule engine) ───────────────────────
+function renderUserRules() {
+  const wrapper = h('div', { className: 'settings-rules settings-user-rules' });
+
+  wrapper.appendChild(h('p', { className: 'settings-hint' },
+    'When a process matching the pattern stays over the threshold for N consecutive polls, notify, kill it, or run a command.'));
+
+  const rules = settingsConfig.userRules || [];
+
+  if (rules.length > 0) {
+    const list = h('div', { className: 'settings-rules-list' });
+    for (let i = 0; i < rules.length; i++) {
+      const rule = rules[i];
+      const unit = rule.metric === 'mem' ? 'MB' : '%';
+      const metricLabel = rule.metric === 'mem' ? 'Memory' : 'CPU';
+      let actionLabel = rule.action;
+      if (rule.action === 'command') actionLabel = `run: ${rule.command}`;
+      const desc = `${metricLabel} > ${rule.threshold}${unit} for ${rule.sustainPolls} polls → ${actionLabel}`;
+
+      const row = h('div', { className: 'settings-rule-row' }, [
+        h('code', { className: 'settings-rule-pattern' }, rule.pattern),
+        h('span', { className: 'settings-user-rule-desc' }, desc),
+        h('button', {
+          className: 'settings-rule-remove',
+          title: 'Remove rule',
+          onClick: () => {
+            const updated = rules.filter((_, j) => j !== i);
+            updateSetting('userRules', updated);
+          },
+        }, '×'),
+      ]);
+      list.appendChild(row);
+    }
+    wrapper.appendChild(list);
+  }
+
+  // Add new rule form
+  const form = h('div', { className: 'settings-user-rule-form' });
+
+  const patternInput = h('input', {
+    type: 'text',
+    className: 'settings-rule-input',
+    placeholder: 'Regex pattern (e.g. node|python)',
+  });
+
+  const metricSelect = h('select', { className: 'settings-rule-select' }, [
+    h('option', { value: 'cpu' }, 'CPU %'),
+    h('option', { value: 'mem' }, 'Memory MB'),
+  ]);
+
+  const thresholdInput = h('input', {
+    type: 'number', min: '1', step: '1',
+    className: 'settings-threshold-input',
+    placeholder: '80',
+  });
+
+  const sustainInput = h('input', {
+    type: 'number', min: '1', max: '60', step: '1',
+    className: 'settings-threshold-input',
+  });
+  sustainInput.value = 3;
+
+  const actionSelect = h('select', { className: 'settings-rule-select' }, [
+    h('option', { value: 'notify' }, 'Notify'),
+    h('option', { value: 'kill' }, 'Kill'),
+    h('option', { value: 'command' }, 'Run command'),
+  ]);
+
+  const commandInput = h('input', {
+    type: 'text',
+    className: 'settings-rule-input',
+    placeholder: 'Command to run',
+  });
+  const cwdInput = h('input', {
+    type: 'text',
+    className: 'settings-rule-input',
+    placeholder: 'Working dir (optional)',
+  });
+  const commandRow = h('div', { className: 'settings-user-rule-command hidden' }, [
+    commandInput,
+    cwdInput,
+  ]);
+  actionSelect.addEventListener('change', () => {
+    commandRow.classList.toggle('hidden', actionSelect.value !== 'command');
+  });
+
+  const flashError = (input) => {
+    input.classList.add('input-error');
+    setTimeout(() => input.classList.remove('input-error'), 1500);
+  };
+
+  const addBtn = h('button', {
+    className: 'btn btn-secondary settings-rule-add',
+    onClick: () => {
+      const pattern = patternInput.value.trim();
+      if (!pattern) return flashError(patternInput);
+      try {
+        new RegExp(pattern, 'i');
+      } catch {
+        return flashError(patternInput);
+      }
+
+      const threshold = Number(thresholdInput.value);
+      if (!threshold || threshold <= 0) return flashError(thresholdInput);
+
+      const sustainPolls = Math.max(1, Math.min(60, Number(sustainInput.value) || 3));
+      const action = actionSelect.value;
+      const command = commandInput.value.trim();
+      const cwd = cwdInput.value.trim();
+      if (action === 'command' && !command) return flashError(commandInput);
+
+      const rule = {
+        id: `rule-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+        pattern,
+        metric: metricSelect.value,
+        threshold,
+        sustainPolls,
+        action,
+      };
+      if (action === 'command') {
+        rule.command = command;
+        if (cwd) rule.cwd = cwd;
+      }
+
+      updateSetting('userRules', [...(settingsConfig.userRules || []), rule]);
+    },
+  }, 'Add');
+
+  form.appendChild(patternInput);
+  form.appendChild(h('div', { className: 'settings-user-rule-fields' }, [
+    metricSelect,
+    h('label', {}, '>'),
+    thresholdInput,
+    h('label', {}, 'for'),
+    sustainInput,
+    h('label', {}, 'polls'),
+    actionSelect,
+    addBtn,
+  ]));
+  form.appendChild(commandRow);
+  wrapper.appendChild(form);
+
   return wrapper;
 }
