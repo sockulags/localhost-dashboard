@@ -7,7 +7,9 @@
     "start": "electron .",
     "dev": "electron . --inspect",
     "test": "node --test",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win"
   },
   "dependencies": {
     "systeminformation": "^5.22.0"
@@ -15,6 +17,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "electron": "^33.0.0",
+    "electron-builder": "^26.15.3",
     "eslint": "^10.6.0",
     "globals": "^17.7.0"
   },
@@ -23,5 +26,25 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/sockulags/localhost-dashboard"
+  },
+  "build": {
+    "appId": "com.sockulags.localhost-dashboard",
+    "productName": "Localhost Dashboard",
+    "files": [
+      "main/**/*",
+      "renderer/**/*",
+      "assets/**/*",
+      "package.json",
+      "LICENSE"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico",
+      "artifactName": "${name}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
