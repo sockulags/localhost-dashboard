@@ -363,5 +363,12 @@ function handleGlobalKeys(e) {
     e.preventDefault();
     filterInput.focus();
     filterInput.select();
+    return;
+  }
+
+  // Ctrl/Cmd+K — open command palette
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+    e.preventDefault();
+    openCommandPalette();
   }
 }

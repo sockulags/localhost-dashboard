@@ -108,6 +108,19 @@ const componentGlobals = {
   stopProfile: 'writable',
   renderProfileBadge: 'writable',
   renderProfilePanel: 'writable',
+  // renderer/js/components/command-palette.js
+  CMD_PALETTE_MAX_RESULTS: 'writable',
+  cmdPaletteOverlay: 'writable',
+  cmdPaletteItems: 'writable',
+  cmdPaletteSelected: 'writable',
+  fuzzyScore: 'writable',
+  buildPaletteCommands: 'writable',
+  executePaletteItem: 'writable',
+  renderCommandPaletteList: 'writable',
+  updatePaletteSelection: 'writable',
+  onCmdPaletteKeyDown: 'writable',
+  openCommandPalette: 'writable',
+  closeCommandPalette: 'writable',
 };
 
 const appGlobals = {
