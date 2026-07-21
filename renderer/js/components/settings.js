@@ -131,6 +131,8 @@ function renderSettingsBody() {
 
   // ── Rules (rule engine) ────────────────────────────
   body.appendChild(renderSection('Rules', renderUserRules()));
+  // ── Local HTTP API ─────────────────────────────────
+  body.appendChild(renderSection('Local HTTP API', renderHttpApi()));
 }
 
 function renderSection(title, content) {
@@ -744,6 +746,44 @@ function renderUserRules() {
   ]));
   form.appendChild(commandRow);
   wrapper.appendChild(form);
+
+  return wrapper;
+}
+
+// ── Local HTTP API ─────────────────────────────────────────
+function renderHttpApi() {
+  const wrapper = h('div', { className: 'settings-http-api' });
+
+  wrapper.appendChild(h('p', { className: 'settings-hint' },
+    'Read-only JSON API for local tooling (e.g. coding agents). GET-only, bound to 127.0.0.1 — never reachable from the network.'));
+
+  wrapper.appendChild(renderToggle(
+    'httpApiEnabled',
+    'Enable local read-only API',
+    !!settingsConfig.httpApiEnabled,
+  ));
+
+  const portInput = h('input', {
+    type: 'number', min: '1024', max: '65535', step: '1',
+    className: 'settings-threshold-input',
+  });
+  portInput.value = settingsConfig.httpApiPort;
+  portInput.addEventListener('change', () => {
+    // Main-process config validation clamps/defaults invalid values;
+    // the settings body re-renders with the validated result.
+    updateSetting('httpApiPort', Number(portInput.value));
+  });
+
+  wrapper.appendChild(h('div', { className: 'settings-threshold-row' }, [
+    h('label', {}, 'Port'), portInput,
+  ]));
+
+  if (settingsConfig.httpApiEnabled) {
+    wrapper.appendChild(h('p', { className: 'settings-hint' }, [
+      'Try: ',
+      h('code', {}, `http://127.0.0.1:${settingsConfig.httpApiPort}/processes`),
+    ]));
+  }
 
   return wrapper;
 }
