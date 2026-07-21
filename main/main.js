@@ -95,6 +95,34 @@ app.whenReady().then(() => {
   if (config.get('httpApiEnabled')) {
     httpApi.start({ getSnapshot: getLastSnapshot, port: config.get('httpApiPort') });
   }
+  // "Kill process" action button on warning notifications. On Windows the
+  // button activation may not be routed by Electron (see notifier.js caveat);
+  // when it is, kill the process and confirm with a small notification.
+  notifier.onAction((pid) => {
+    const pidNum = Number(pid);
+    if (!Number.isInteger(pidNum) || pidNum <= 0) return;
+    // Run inside a promise chain so a synchronous throw is captured too,
+    // and so this keeps working if kill() ever becomes async.
+    Promise.resolve()
+      .then(() => require('./services/process-killer').kill(pidNum))
+      .then((result) => {
+        const { Notification } = require('electron');
+        if (!Notification.isSupported()) return;
+        const n = new Notification(
+          result && result.success
+            ? { title: 'Process killed', body: `Killed ${pidNum}`, silent: true }
+            : {
+                title: 'Failed to kill process',
+                body: (result && result.error) || 'Unknown error',
+                silent: true,
+              }
+        );
+        n.show();
+      })
+      .catch((err) => {
+        console.error('Kill-from-notification failed:', err);
+      });
+  });
 });
 
 app.on('before-quit', () => {
