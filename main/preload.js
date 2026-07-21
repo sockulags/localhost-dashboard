@@ -40,4 +40,7 @@ contextBridge.exposeInMainWorld('api', {
 
   // ── Event history
   getEventHistory: (limit) => ipcRenderer.invoke('get-event-history', limit),
+
+  // ── Profile suggestions ──────────────────────────────────────
+  scanProfileSuggestions: () => ipcRenderer.invoke('scan-profile-suggestions'),
 });

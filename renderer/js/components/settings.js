@@ -388,7 +388,6 @@ function renderProfiles() {
   if (profiles.length === 0) {
     wrapper.appendChild(h('p', { className: 'settings-profiles-empty' },
       'No profiles yet. Right-click any process to add it to a profile.'));
-    return wrapper;
   }
 
   for (let pi = 0; pi < profiles.length; pi++) {
@@ -481,5 +480,121 @@ function renderProfiles() {
     wrapper.appendChild(card);
   }
 
+  wrapper.appendChild(renderProfileSuggestions(profiles));
+
+  return wrapper;
+}
+
+// ── Profile suggestions (auto-generated from a folder scan) ──
+// State survives body re-renders while the panel is open.
+let pendingProfileSuggestions = null; // null = hidden, [] = scan found nothing
+
+function renderProfileSuggestions(profiles) {
+  // Reset the pending scan whenever the settings modal closes so a stale
+  // panel does not reappear on the next open. (closeSettings is shared code
+  // owned outside this section, so observe the modal instead of editing it.)
+  const modal = document.getElementById('settings-modal');
+  if (modal && !modal.dataset.suggestionsObserved) {
+    modal.dataset.suggestionsObserved = '1';
+    new MutationObserver(() => {
+      if (modal.classList.contains('hidden')) pendingProfileSuggestions = null;
+    }).observe(modal, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  const wrapper = h('div', { className: 'profile-suggestions' });
+
+  const importBtn = h('button', {
+    className: 'btn btn-secondary profile-suggestions-import',
+    onClick: async () => {
+      const res = await window.api.scanProfileSuggestions();
+      if (!res || res.canceled) return;
+      if (!res.success) {
+        showError(res.error || 'Failed to scan folder');
+        return;
+      }
+      pendingProfileSuggestions = res.suggestions || [];
+      renderSettingsBody();
+    },
+  }, 'Import suggestions…');
+  wrapper.appendChild(importBtn);
+
+  if (pendingProfileSuggestions === null) return wrapper;
+
+  const panel = h('div', { className: 'profile-suggestions-panel' });
+
+  const closePanel = () => {
+    pendingProfileSuggestions = null;
+    renderSettingsBody();
+  };
+
+  if (pendingProfileSuggestions.length === 0) {
+    panel.appendChild(h('p', { className: 'settings-profiles-empty' },
+      'No projects found in the selected folder.'));
+    panel.appendChild(h('div', { className: 'profile-suggestions-actions' }, [
+      h('button', { className: 'btn btn-secondary', onClick: closePanel }, 'Close'),
+    ]));
+    wrapper.appendChild(panel);
+    return wrapper;
+  }
+
+  panel.appendChild(h('p', { className: 'settings-hint' },
+    'Select the services to import as a new profile.'));
+
+  const checkboxes = [];
+  const list = h('div', { className: 'profile-suggestions-list' });
+  for (const suggestion of pendingProfileSuggestions) {
+    const checkbox = h('input', { type: 'checkbox', className: 'profile-suggestion-check' });
+    checkbox.checked = true;
+    checkboxes.push({ checkbox, suggestion });
+
+    const label = h('label', { className: 'profile-suggestion-row' }, [
+      checkbox,
+      h('span', { className: 'profile-suggestion-name' }, suggestion.name),
+      h('code', { className: 'profile-suggestion-cmd' }, suggestion.command),
+      h('span', { className: 'profile-suggestion-cwd', title: suggestion.cwd }, suggestion.cwd),
+    ]);
+    list.appendChild(label);
+  }
+  panel.appendChild(list);
+
+  const confirmBtn = h('button', {
+    className: 'btn btn-secondary profile-suggestions-confirm',
+    onClick: () => {
+      const selected = checkboxes
+        .filter(({ checkbox }) => checkbox.checked)
+        .map(({ suggestion }) => suggestion);
+      if (selected.length === 0) {
+        closePanel();
+        return;
+      }
+
+      // Deterministic ids: the profile gets the timestamp and each service
+      // gets timestamp + index, so ids are unique within this import.
+      // (context-menu.js makeServiceEntry mints one id per user action and
+      // can afford randomness; a batch cannot.)
+      const now = Date.now();
+      const profile = {
+        id: String(now),
+        name: 'Imported suggestions',
+        services: selected.map((s, i) => ({
+          id: String(now + i + 1),
+          name: s.name,
+          pattern: s.pattern,
+          command: s.command,
+          cwd: s.cwd,
+        })),
+      };
+
+      pendingProfileSuggestions = null;
+      updateSetting('profiles', [...profiles, profile]);
+    },
+  }, 'Add selected');
+
+  panel.appendChild(h('div', { className: 'profile-suggestions-actions' }, [
+    confirmBtn,
+    h('button', { className: 'btn btn-secondary', onClick: closePanel }, 'Cancel'),
+  ]));
+
+  wrapper.appendChild(panel);
   return wrapper;
 }
