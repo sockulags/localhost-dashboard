@@ -15,6 +15,7 @@ const utilGlobals = {
   formatCpu: 'writable',
   cpuClass: 'writable',
   formatPort: 'writable',
+  formatCpuSeconds: 'writable',
   // renderer/js/utils/reconcile.js
   reconcileChildren: 'writable',
 };

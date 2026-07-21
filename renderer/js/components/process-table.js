@@ -2,13 +2,30 @@
 const CLUSTER_MIN = 3;
 
 // ── Detail row (expanded process) ──────────────────────────────
-function renderDetailContent(data) {
+function findProcInState(pid) {
+  for (const group of Object.values(AppState.groups)) {
+    for (const proc of group.processes) {
+      if (proc.pid === pid) return proc;
+    }
+  }
+  return null;
+}
+
+function renderDetailContent(data, pid) {
   const sections = [];
 
   // Command line
   sections.push(renderDetailSection('Command Line', data.commandLine
     ? h('code', { className: 'detail-code' }, data.commandLine)
     : h('span', { className: 'detail-empty' }, 'Not available')
+  ));
+
+  // Accumulated CPU time (enriched onto the proc snapshot by main)
+  const proc = findProcInState(pid);
+  sections.push(renderDetailSection('CPU time',
+    proc && typeof proc.cpuTimeSec === 'number'
+      ? h('span', {}, formatCpuSeconds(proc.cpuTimeSec))
+      : h('span', { className: 'detail-empty' }, 'Not available')
   ));
 
   // Network connections
@@ -92,7 +109,7 @@ function populateDetailRow(tr, pid) {
       h('span', { className: 'detail-error' }, 'Could not retrieve process details.'),
     ]));
   } else {
-    detailTd.appendChild(renderDetailContent(entry.data));
+    detailTd.appendChild(renderDetailContent(entry.data, pid));
   }
   tr.appendChild(detailTd);
 }
@@ -197,7 +214,10 @@ function populateRow(tr, proc, opts = {}) {
   }
   nameChildren.push(h('span', {}, proc.name));
 
-  const cpuCell = h('td', { className: `col-cpu ${cpuClass(proc.cpu)}` }, [
+  const cpuCell = h('td', {
+    className: `col-cpu ${cpuClass(proc.cpu)}`,
+    title: `Accumulated CPU time: ${formatCpuSeconds(proc.cpuTimeSec)}`,
+  }, [
     h('span', { className: 'cell-value' }, formatCpu(proc.cpu)),
     cpuSparkline,
   ]);
